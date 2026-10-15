@@ -38,7 +38,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->index(['inventory_item_id', 'created_at']);
-            $table->index(['production_batch_id', 'transaction_type']);
+            $table->index(['production_batch_id', 'transaction_type'], 'inv_tx_batch_type_idx');
         });
 
         $now = now();
