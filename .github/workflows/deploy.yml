@@ -41,8 +41,9 @@ jobs:
           npm ci
           npm run build
 
-      - name: Deploy to InfinityFree
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Install production dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction
+
         with:
           server: ftpupload.net
           username: ${{ secrets.FTP_USERNAME }}
