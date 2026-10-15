@@ -47,7 +47,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: 21
-          server-dir: /htdocs/
+          server-dir: /energiciency.freedev.app/htdocs/
           exclude: |
             **/.git*
             **/.github/**
