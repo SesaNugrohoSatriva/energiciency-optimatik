@@ -50,16 +50,9 @@ jobs:
           server-dir: /energiciency.freedev.app/htdocs/
           exclude: |
             **/.git*
-            **/.github/**
+            **/.git*/**
             **/node_modules/**
-            **/.env
-            **/.env.*
-            **/tests/**
-            **/phpunit.xml
-            **/phpunit.xml.dist
-            **/.phpunit.cache/**
-            **/storage/logs/**
-            **/storage/framework/cache/data/**
-            **/storage/framework/sessions/**
-            **/storage/framework/views/**
             **/vendor/**
+            **/tests/**
+            README.md
+            .env.example
