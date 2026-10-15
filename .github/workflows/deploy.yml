@@ -25,10 +25,8 @@ jobs:
           extensions: mbstring, openssl, pdo_mysql, fileinfo, tokenizer, xml, ctype, curl, dom, filter, hash, session
           coverage: none
 
-      - name: Install production dependencies
-        run: |
-          composer install --no-dev --prefer-dist --no-interaction
-          composer dump-autoload --no-dev --optimize=false
+      - name: Install Composer dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,11 +39,10 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install production dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction
-
+      - name: Deploy to InfinityFree
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ftpupload.net
+          server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
