@@ -28,6 +28,12 @@ Aplikasi manajemen produksi, OEE, BOM, persediaan, energi, costing, maintenance,
    ```
 6. Buka `http://127.0.0.1:8000`.
 
+## Deployment InfinityFree
+- Workflow GitHub Actions mengunggah project ke `htdocs`; root `index.php` meneruskan request ke `public/index.php`, sedangkan `.htaccess` mengarahkan asset dan route ke folder `public`.
+- Workflow memasang dependensi Composer dan mengunggah `vendor`; jangan mengecualikan folder tersebut dari deploy.
+- Buat `.env` secara manual di direktori project pada server (sejajar dengan `artisan`), karena file `.env` sengaja tidak diunggah. Isi minimal `APP_KEY`, `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, dan kredensial database hosting.
+- Pastikan `storage` dan `bootstrap/cache` dapat ditulisi oleh PHP. Setelah deploy, jalankan migrasi melalui cara yang tersedia di hosting sebelum membuka aplikasi.
+
 ## Login demo
 - Email: `admin@energiciency.local`
 - Password: `password`

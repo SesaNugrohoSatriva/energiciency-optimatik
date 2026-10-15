@@ -62,4 +62,3 @@ jobs:
             **/storage/framework/cache/data/**
             **/storage/framework/sessions/**
             **/storage/framework/views/**
-            **/vendor/**
