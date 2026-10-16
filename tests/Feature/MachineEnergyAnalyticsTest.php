@@ -97,7 +97,15 @@ class MachineEnergyAnalyticsTest extends TestCase
             ->assertSee('EVT-FILTER-1')
             ->assertDontSee('EVT-FILTER-2')
             ->assertSee('7,00 kWh')
-            ->assertSee('SIMULASI');
+            ->assertSee('SIMULASI')
+            ->assertSee('Dari tanggal')
+            ->assertSee('Mesin')
+            ->assertSee('Sumber data')
+            ->assertSee('Tampilan tren')
+            ->assertDontSee('Production order')
+            ->assertDontSee('Production batch')
+            ->assertDontSee('Semua device')
+            ->assertDontSee('Cari mesin, kode, event, device, atau order');
     }
 
     public function test_machine_detail_uses_oee_inputs_and_never_claims_device_online_from_a_past_reading(): void

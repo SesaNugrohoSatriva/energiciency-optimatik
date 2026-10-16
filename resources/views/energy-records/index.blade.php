@@ -1,11 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <form method="GET" action="{{ route('energy-records.index') }}" class="app-card mb-5 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label>
-            <span class="app-label">Cari mesin, kode, event, device, atau order</span>
-            <input class="app-input" type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama mesin, kode, event ID...">
-        </label>
+    <form method="GET" action="{{ route('energy-records.index') }}" class="app-card mb-5 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5">
         <label>
             <span class="app-label">Dari tanggal</span>
             <input class="app-input" type="date" name="from" value="{{ $filters['from'] }}">
@@ -33,41 +29,14 @@
             </select>
         </label>
         <label>
-            <span class="app-label">Production order</span>
-            <select class="app-input" name="production_order_id">
-                <option value="">Semua order</option>
-                @foreach ($orders as $order)
-                    <option value="{{ $order->id }}" @selected(($filters['production_order_id'] ?? '') == $order->id)>{{ $order->order_number }}</option>
-                @endforeach
-            </select>
-        </label>
-        <label>
-            <span class="app-label">Production batch</span>
-            <select class="app-input" name="production_batch_id">
-                <option value="">Semua batch</option>
-                @foreach ($batches as $batch)
-                    <option value="{{ $batch->id }}" @selected(($filters['production_batch_id'] ?? '') == $batch->id)>{{ $batch->batch_number }}</option>
-                @endforeach
-            </select>
-        </label>
-        <label>
-            <span class="app-label">Device</span>
-            <select class="app-input" name="device_id">
-                <option value="">Semua device</option>
-                @foreach ($devices as $device)
-                    <option value="{{ $device }}" @selected(($filters['device_id'] ?? '') === $device)>{{ $device }}</option>
-                @endforeach
-            </select>
-        </label>
-        <label>
-            <span class="app-label">Bucket grafik</span>
+            <span class="app-label">Tampilan tren</span>
             <select class="app-input" name="interval">
                 @foreach (['hour' => 'Jam', 'day' => 'Hari', 'week' => 'Minggu', 'month' => 'Bulan'] as $value => $label)
                     <option value="{{ $value }}" @selected($filters['interval'] === $value)>{{ $label }}</option>
                 @endforeach
             </select>
         </label>
-        <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-4">
+        <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-5">
             <x-ui.button type="submit">Terapkan filter</x-ui.button>
             <a href="{{ route('energy-records.index') }}" class="app-button-secondary">Reset</a>
         </div>
@@ -172,7 +141,7 @@
                     <td class="px-4 py-3 text-right"><a class="font-semibold text-brand-700 hover:underline" href="{{ route('energy-records.show', $record->id) }}">Buka detail</a></td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="p-0"><x-ui.empty-state title="Belum ada pembacaan energi" description="Periksa rentang waktu, sumber, mesin, atau device. Catatan baru dapat dimasukkan manual atau dikirim melalui endpoint IoT yang tersedia." /></td></tr>
+                <tr><td colspan="7" class="p-0"><x-ui.empty-state title="Belum ada pembacaan energi" description="Periksa periode, sumber, atau mesin yang dipilih. Catatan baru dapat dimasukkan manual atau dikirim melalui endpoint IoT yang tersedia." /></td></tr>
             @endforelse
         </tbody>
     </x-ui.table>

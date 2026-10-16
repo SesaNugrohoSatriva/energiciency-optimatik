@@ -4,10 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\EnergyRecord;
 use App\Models\Machine;
-use App\Models\ProductionBatch;
-use App\Models\ProductionOrder;
 use App\Services\EnergyAnalyticsService;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 class EnergyMonitoringController extends Controller
@@ -28,21 +25,6 @@ class EnergyMonitoringController extends Controller
         ])->latest('recorded_at')->paginate(20)->withQueryString();
         $machines = Machine::query()->orderBy('name')->get(['id', 'name', 'code']);
         $sources = EnergyRecord::query()->distinct()->orderBy('source')->pluck('source');
-        $orders = ProductionOrder::query()
-            ->whereHas('energyRecords', fn ($records) => $records->whereBetween('recorded_at', [
-                CarbonImmutable::parse($filters['from'])->startOfDay(),
-                CarbonImmutable::parse($filters['to'])->endOfDay(),
-            ]))
-            ->orderBy('order_number')
-            ->get(['id', 'order_number']);
-        $batches = ProductionBatch::query()
-            ->whereHas('energyRecords', fn ($records) => $records->whereBetween('recorded_at', [
-                CarbonImmutable::parse($filters['from'])->startOfDay(),
-                CarbonImmutable::parse($filters['to'])->endOfDay(),
-            ]))
-            ->orderBy('batch_number')
-            ->get(['id', 'batch_number']);
-        $devices = EnergyRecord::query()->whereNotNull('device_id')->distinct()->orderBy('device_id')->pluck('device_id');
         $pageTitle = 'Energy Monitoring';
         $pageDescription = 'Tren, biaya, dan histori energi yang tercatat—dengan simulasi dibedakan dari data IoT.';
         $breadcrumbs = [['label' => 'Dashboard', 'url' => route('dashboard')], ['label' => 'Energy Monitoring']];
@@ -55,9 +37,6 @@ class EnergyMonitoringController extends Controller
             'records',
             'machines',
             'sources',
-            'orders',
-            'batches',
-            'devices',
             'pageTitle',
             'pageDescription',
             'breadcrumbs'
