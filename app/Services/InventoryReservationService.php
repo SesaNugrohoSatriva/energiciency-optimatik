@@ -25,7 +25,7 @@ class InventoryReservationService
             }
             foreach ($materials as $material) {
                 if (!$material->inventory_item_id) {
-                    throw ValidationException::withMessages(['materials' => 'Tautkan semua SKU BOM ke item inventory sebelum melakukan reservasi. Komponen belum tertaut: '.$material->component_name.'.']);
+                    throw ValidationException::withMessages(['materials' => 'Tautkan semua SKU BOM ke item inventory sebelum melakukan reservasi. Komponen belum tertaut: ' . $material->component_name . '.']);
                 }
                 $remaining = (float) $material->required_quantity - (float) $material->reserved_quantity;
                 if ($remaining <= 0) {
@@ -37,7 +37,7 @@ class InventoryReservationService
                     ->sum(DB::raw('reserved_quantity - consumed_quantity'));
                 $available = (float) $inventory->quantity - $otherReservations;
                 if ($available + 0.00001 < $remaining) {
-                    throw ValidationException::withMessages(['materials' => 'Stok tersedia untuk '.$inventory->sku.' tidak mencukupi. Tersedia '.number_format(max(0, $available), 3, ',', '.').' '.$inventory->unit.'.']);
+                    throw ValidationException::withMessages(['materials' => 'Stok tersedia untuk ' . $inventory->sku . ' tidak mencukupi. Tersedia ' . number_format(max(0, $available), 3, ',', '.') . ' ' . $inventory->unit . '.']);
                 }
 
                 $material->update([
@@ -62,12 +62,12 @@ class InventoryReservationService
                 $quantity = (float) $quantity;
                 $remaining = (float) $material->reserved_quantity - (float) $material->consumed_quantity;
                 if ($quantity <= 0 || $quantity > $remaining + 0.00001) {
-                    throw ValidationException::withMessages(['consumptions' => 'Kuantitas konsumsi harus positif dan tidak melebihi material yang direservasi untuk '.$material->component_name.'.']);
+                    throw ValidationException::withMessages(['consumptions' => 'Kuantitas konsumsi harus positif dan tidak melebihi material yang direservasi untuk ' . $material->component_name . '.']);
                 }
 
                 $inventory = InventoryItem::query()->lockForUpdate()->findOrFail($material->inventory_item_id);
                 if ((float) $inventory->quantity + 0.00001 < $quantity) {
-                    throw ValidationException::withMessages(['consumptions' => 'Stok aktual '.$inventory->sku.' sudah tidak mencukupi untuk konsumsi.']);
+                    throw ValidationException::withMessages(['consumptions' => 'Stok aktual ' . $inventory->sku . ' sudah tidak mencukupi untuk konsumsi.']);
                 }
                 $inventory->decrement('quantity', $quantity);
                 $material->update([

@@ -33,12 +33,12 @@ class EnergyAnalyticsService
 
         $from = $filters['from'] ?? null;
         $to = $filters['to'] ?? null;
-        if (! $from && ! $to) {
+        if (!$from && !$to) {
             $to = $anchor;
             $from = CarbonImmutable::parse($anchor)->subDays(13)->toDateString();
-        } elseif (! $from) {
+        } elseif (!$from) {
             $from = CarbonImmutable::parse($to)->subDays(13)->toDateString();
-        } elseif (! $to) {
+        } elseif (!$to) {
             $to = CarbonImmutable::now()->toDateString();
         }
 
@@ -59,18 +59,18 @@ class EnergyAnalyticsService
     {
         return EnergyRecord::query()
             ->when($machineId, fn (Builder $query) => $query->where('machine_id', $machineId))
-            ->when(! $machineId && ($filters['machine_id'] ?? null), fn (Builder $query, int $id) => $query->where('machine_id', $id))
+            ->when(!$machineId && ($filters['machine_id'] ?? null), fn (Builder $query, int $id) => $query->where('machine_id', $id))
             ->when($filters['search'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $query) use ($search): void {
-                    $query->where('external_event_id', 'like', '%'.$search.'%')
-                        ->orWhere('device_id', 'like', '%'.$search.'%')
-                        ->orWhere('source', 'like', '%'.$search.'%')
+                    $query->where('external_event_id', 'like', '%' . $search . '%')
+                        ->orWhere('device_id', 'like', '%' . $search . '%')
+                        ->orWhere('source', 'like', '%' . $search . '%')
                         ->orWhereHas('machine', function (Builder $machine) use ($search): void {
-                            $machine->where('name', 'like', '%'.$search.'%')
-                                ->orWhere('code', 'like', '%'.$search.'%');
+                            $machine->where('name', 'like', '%' . $search . '%')
+                                ->orWhere('code', 'like', '%' . $search . '%');
                         })
-                        ->orWhereHas('productionOrder', fn (Builder $order) => $order->where('order_number', 'like', '%'.$search.'%'))
-                        ->orWhereHas('productionBatch', fn (Builder $batch) => $batch->where('batch_number', 'like', '%'.$search.'%'));
+                        ->orWhereHas('productionOrder', fn (Builder $order) => $order->where('order_number', 'like', '%' . $search . '%'))
+                        ->orWhereHas('productionBatch', fn (Builder $batch) => $batch->where('batch_number', 'like', '%' . $search . '%'));
                 });
             })
             ->when($filters['from'] ?? null, fn (Builder $query, string $from) => $query->where('recorded_at', '>=', CarbonImmutable::parse($from)->startOfDay()))

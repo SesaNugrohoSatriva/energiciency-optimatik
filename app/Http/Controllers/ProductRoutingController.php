@@ -20,7 +20,7 @@ class ProductRoutingController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:160']]);
         $routing = $service->createDraft($product, $data['name']);
 
-        return redirect()->route('products.routings.show', [$product, $routing])->with('success', 'Draft routing versi '.$routing->version.' berhasil dibuat.');
+        return redirect()->route('products.routings.show', [$product, $routing])->with('success', 'Draft routing versi ' . $routing->version . ' berhasil dibuat.');
     }
 
     public function show(Product $product, ProductRouting $routing): View
@@ -29,13 +29,13 @@ class ProductRoutingController extends Controller
         $routing->load(['operations.process.machine', 'operations.machine']);
         $processes = Process::with('machine')->orderBy('name')->get();
         $machines = Machine::orderBy('name')->get();
-        $pageTitle = $product->name.' · Routing v'.$routing->version;
+        $pageTitle = $product->name . ' · Routing v' . $routing->version;
         $pageDescription = 'Urutan proses dan kebutuhan operasi untuk produk ini.';
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],
             ['label' => 'Products', 'url' => route('products.index')],
             ['label' => $product->name, 'url' => route('products.show', $product)],
-            ['label' => 'Routing v'.$routing->version],
+            ['label' => 'Routing v' . $routing->version],
         ];
 
         return view('products.routing', compact('product', 'routing', 'processes', 'machines', 'pageTitle', 'pageDescription', 'breadcrumbs'));
@@ -129,6 +129,6 @@ class ProductRoutingController extends Controller
         abort_unless($routing->product_id === $product->id, 404);
         $service->activate($routing);
 
-        return redirect()->route('products.routings.show', [$product, $routing])->with('success', 'Routing versi '.$routing->version.' kini aktif.');
+        return redirect()->route('products.routings.show', [$product, $routing])->with('success', 'Routing versi ' . $routing->version . ' kini aktif.');
     }
 }

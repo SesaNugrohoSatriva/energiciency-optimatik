@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OeeRecord extends Model
 {
     protected $table = 'oee_records';
+
     protected $guarded = [];
 
     protected function casts(): array

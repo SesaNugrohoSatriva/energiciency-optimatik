@@ -1,1 +1,11 @@
-<?php namespace App\Services; use App\Models\{Product,BomItem,EnergyRecord}; class ProductCostingService { public function estimate(Product $product,float $energyKwh,float $laborCost,float $overheadCost): array { $material=(float)BomItem::where('product_id',$product->id)->selectRaw('COALESCE(SUM(quantity_per_unit * unit_cost),0) as total')->value('total'); $energy=$energyKwh*(float)env('ENERGY_TARIFF_PER_KWH',1640); return ['material'=>$material,'labor'=>$laborCost,'energy'=>$energy,'overhead'=>$overheadCost,'total'=>$material+$laborCost+$energy+$overheadCost]; } }
+<?php
+
+namespace App\Services; use App\Models\{Product,BomItem,EnergyRecord}; class ProductCostingService
+{
+    public function estimate(Product $product, float $energyKwh, float $laborCost, float $overheadCost): array
+    {
+        $material = (float)BomItem::where('product_id', $product->id)->selectRaw('COALESCE(SUM(quantity_per_unit * unit_cost),0) as total')->value('total'); $energy = $energyKwh * (float)env('ENERGY_TARIFF_PER_KWH', 1640);
+
+return ['material' => $material, 'labor' => $laborCost, 'energy' => $energy, 'overhead' => $overheadCost, 'total' => $material + $laborCost + $energy + $overheadCost];
+    }
+}

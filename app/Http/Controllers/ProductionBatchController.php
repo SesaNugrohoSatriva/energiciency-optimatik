@@ -23,7 +23,7 @@ class ProductionBatchController extends Controller
         $batch = $service->create($productionOrder, (int) $data['planned_quantity'], $data['notes'] ?? null, $request->user()?->id);
 
         return redirect()->route('production-orders.batches.show', [$productionOrder, $batch])
-            ->with('success', 'Batch '.$batch->batch_number.' berhasil dibuat dengan snapshot struktur order.');
+            ->with('success', 'Batch ' . $batch->batch_number . ' berhasil dibuat dengan snapshot struktur order.');
     }
 
     public function show(ProductionOrder $productionOrder, ProductionBatch $batch): View
@@ -38,7 +38,7 @@ class ProductionBatchController extends Controller
         $actualOverheadCost = (float) $batch->costEntries->where('category', 'overhead')->sum('amount');
         $plannedEnergyKwh = collect($batch->routing_snapshot['operations'] ?? [])->sum(fn ($operation) => (float) ($operation['estimated_energy_kwh'] ?? 0));
         $actualCostTotal = $actualMaterialCost + $actualEnergyCost + $actualLaborCost + $actualOverheadCost;
-        $pageTitle = 'Batch '.$batch->batch_number;
+        $pageTitle = 'Batch ' . $batch->batch_number;
         $pageDescription = 'Progres, output, dan struktur produk yang dibekukan untuk batch ini.';
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],

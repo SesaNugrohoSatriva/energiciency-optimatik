@@ -53,7 +53,7 @@ class EnergyMonitoringController extends Controller
             'routingOperation',
         ])->findOrFail($record);
         $payload = is_array($record->payload) ? $this->redactPayload($record->payload) : null;
-        $pageTitle = 'Catatan energi · '.$record->external_event_id;
+        $pageTitle = 'Catatan energi · ' . $record->external_event_id;
         $pageDescription = 'Detail event energi tersimpan; payload sensitif disamarkan.';
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],

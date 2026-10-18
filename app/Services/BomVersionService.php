@@ -16,7 +16,7 @@ class BomVersionService
             $active = $lockedProduct->activeBom()->with('items')->first();
             $version = ((int) $lockedProduct->boms()->max('version')) + 1;
             $bom = $lockedProduct->boms()->create([
-                'bom_number' => $lockedProduct->sku.'-BOM-'.str_pad((string) $version, 3, '0', STR_PAD_LEFT),
+                'bom_number' => $lockedProduct->sku . '-BOM-' . str_pad((string) $version, 3, '0', STR_PAD_LEFT),
                 'version' => $version,
                 'status' => 'draft',
                 'effective_from' => now()->toDateString(),

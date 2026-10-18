@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProductionOrder extends Model
 {
     protected $table = 'production_orders';
+
     protected $guarded = [];
 
     protected function casts(): array

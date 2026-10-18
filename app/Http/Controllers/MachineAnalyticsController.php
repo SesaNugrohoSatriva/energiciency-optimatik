@@ -125,11 +125,11 @@ class MachineAnalyticsController extends Controller
                     ->when($filters['device_id'] ?? null, fn ($query, string $deviceId) => $query->where('device_id', $deviceId))
                     ->when($filters['search'] ?? null, function ($query, string $search): void {
                         $query->where(function ($query) use ($search): void {
-                            $query->where('external_event_id', 'like', '%'.$search.'%')
-                                ->orWhere('device_id', 'like', '%'.$search.'%')
-                                ->orWhereHas('machine', fn ($machineQuery) => $machineQuery->where('name', 'like', '%'.$search.'%')->orWhere('code', 'like', '%'.$search.'%'))
-                                ->orWhereHas('productionOrder', fn ($orderQuery) => $orderQuery->where('order_number', 'like', '%'.$search.'%'))
-                                ->orWhereHas('productionBatch', fn ($batchQuery) => $batchQuery->where('batch_number', 'like', '%'.$search.'%'));
+                            $query->where('external_event_id', 'like', '%' . $search . '%')
+                                ->orWhere('device_id', 'like', '%' . $search . '%')
+                                ->orWhereHas('machine', fn ($machineQuery) => $machineQuery->where('name', 'like', '%' . $search . '%')->orWhere('code', 'like', '%' . $search . '%'))
+                                ->orWhereHas('productionOrder', fn ($orderQuery) => $orderQuery->where('order_number', 'like', '%' . $search . '%'))
+                                ->orWhereHas('productionBatch', fn ($batchQuery) => $batchQuery->where('batch_number', 'like', '%' . $search . '%'));
                         });
                     })
                     ->orderBy('recorded_at'),
@@ -147,7 +147,7 @@ class MachineAnalyticsController extends Controller
             ->orderBy('scheduled_at')
             ->first();
         $pageTitle = $machine->name;
-        $pageDescription = $machine->code.' · Profil mesin, histori energi, produksi tertaut, OEE, dan maintenance.';
+        $pageDescription = $machine->code . ' · Profil mesin, histori energi, produksi tertaut, OEE, dan maintenance.';
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],
             ['label' => 'Machines', 'url' => route('machines.index')],

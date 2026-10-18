@@ -130,7 +130,7 @@ class DashboardController extends Controller
             ? "strftime('%Y-%m-01', recorded_at)"
             : "DATE_FORMAT(recorded_at, '%Y-%m-01')";
         $monthly = EnergyRecord::query()
-            ->selectRaw($periodExpression.' as period, SUM(kwh) as kwh, SUM(cost) as cost')
+            ->selectRaw($periodExpression . ' as period, SUM(kwh) as kwh, SUM(cost) as cost')
             ->groupBy('period')
             ->orderByDesc('period')
             ->limit(12)

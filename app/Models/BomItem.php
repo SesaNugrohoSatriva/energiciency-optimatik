@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BomItem extends Model
 {
     protected $table = 'bom_items';
+
     protected $guarded = [];
 
     public function product(): BelongsTo

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Machine extends Model
 {
     protected $table = 'machines';
+
     protected $guarded = [];
 
     public function processes(): HasMany

@@ -15,7 +15,7 @@ class BomVersionController extends Controller
         $bom = $service->createDraft($product);
 
         return redirect()->route('bom-items.create', ['product_id' => $product->id, 'bom_id' => $bom->id])
-            ->with('success', 'Draft BOM '.$bom->bom_number.' dibuat. Periksa pemetaan inventory dan komponen sebelum aktivasi.');
+            ->with('success', 'Draft BOM ' . $bom->bom_number . ' dibuat. Periksa pemetaan inventory dan komponen sebelum aktivasi.');
     }
 
     public function activate(Product $product, Bom $bom, BomVersionService $service): RedirectResponse
@@ -26,6 +26,6 @@ class BomVersionController extends Controller
         }
         $service->activate($bom);
 
-        return redirect()->route('products.show', [$product, 'tab' => 'bom'])->with('success', 'BOM versi '.$bom->version.' kini aktif.');
+        return redirect()->route('products.show', [$product, 'tab' => 'bom'])->with('success', 'BOM versi ' . $bom->version . ' kini aktif.');
     }
 }

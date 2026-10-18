@@ -26,7 +26,7 @@ class ProductionBatchService
 
             $next = ((int) $lockedOrder->batches()->count()) + 1;
             $batch = $lockedOrder->batches()->create([
-                'batch_number' => $lockedOrder->order_number.'-B'.str_pad((string) $next, 3, '0', STR_PAD_LEFT),
+                'batch_number' => $lockedOrder->order_number . '-B' . str_pad((string) $next, 3, '0', STR_PAD_LEFT),
                 'planned_quantity' => $plannedQuantity,
                 'status' => 'planned',
                 'bom_snapshot' => $lockedOrder->bom_snapshot,
