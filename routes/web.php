@@ -8,9 +8,13 @@ use App\Http\Controllers\BomVersionController;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\EnergyMonitoringController;
 use App\Http\Controllers\MachineAnalyticsController;
+use App\Http\Controllers\IotDeviceController;
+use App\Http\Controllers\TimeSeriesController;
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::resource('iot-devices', IotDeviceController::class);
+    Route::get('/time-series', [TimeSeriesController::class, 'index'])->name('time-series.index');
     Route::get('/reports', [DashboardController::class, 'reports'])->name('reports');
     Route::get('/costing', [DashboardController::class, 'costing'])->name('costing');
     Route::prefix('production-orders/{productionOrder}/batches')->name('production-orders.batches.')->group(function () {
