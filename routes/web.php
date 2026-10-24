@@ -10,7 +10,8 @@ use App\Http\Controllers\EnergyMonitoringController;
 use App\Http\Controllers\MachineAnalyticsController;
 use App\Http\Controllers\IotDeviceController;
 use App\Http\Controllers\TimeSeriesController;
-Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
+Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : view('landing'));
+Route::view('/profil', 'landing')->name('profile');
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::resource('iot-devices', IotDeviceController::class);

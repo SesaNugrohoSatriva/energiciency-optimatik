@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="113" y1="74" x2="1300" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D3651"/>
+      <stop offset=".52" stop-color="#101F33"/>
+      <stop offset="1" stop-color="#0A1727"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="708" y1="580" x2="713" y2="953" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#243C54"/>
+      <stop offset="1" stop-color="#101E2F"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#DDE9F1"/>
+      <stop offset=".45" stop-color="#8299AA"/>
+      <stop offset="1" stop-color="#43596C"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#56B7F1"/>
+      <stop offset="1" stop-color="#17679F"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFC16D"/>
+      <stop offset="1" stop-color="#E97833"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0v48" stroke="#B7D8F4" stroke-opacity=".055"/>
+    </pattern>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="18"/>
+      <feOffset dy="18"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".32"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h1440v960H0z"/>
+  <path fill="url(#grid)" d="M0 0h1440v960H0z"/>
+  <circle cx="1172" cy="308" r="176" fill="#237FBE" fill-opacity=".11" filter="url(#glow)"/>
+
+  <g opacity=".5" stroke="#8CA5BA" stroke-width="5">
+    <path d="M80 94h1280M100 94v84m400-84v84m400-84v84m400-84v84"/>
+    <path d="M120 180h1190M160 180v118m390-118v118m410-118v118m350-118v118"/>
+  </g>
+  <g fill="#D8EAFB" fill-opacity=".11">
+    <path d="M170 117h92v45h-92zM585 117h92v45h-92zM1000 117h92v45h-92z"/>
+  </g>
+  <g fill="#BDD7E8" fill-opacity=".8">
+    <path d="M181 124h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4z"/>
+    <path d="M596 124h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4z"/>
+    <path d="M1011 124h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4zm11 0h4v30h-4z"/>
+  </g>
+  <path d="m0 647 1440-119v432H0z" fill="url(#floor)"/>
+  <path d="m0 647 1440-119" stroke="#90A8BA" stroke-opacity=".35" stroke-width="3"/>
+  <g opacity=".35" stroke="#8EA5B7" stroke-width="2">
+    <path d="m160 960 320-329m40 329 225-346m140 346 130-364m235 364 50-380"/>
+    <path d="m0 812 1440-119M0 890l1440-97"/>
+  </g>
+  <path d="M50 735h1340" stroke="#49A9E4" stroke-opacity=".32" stroke-width="3" stroke-dasharray="12 14"/>
+
+  <g filter="url(#shadow)">
+    <path d="m120 600 348-31 87 50-350 37z" fill="#60778B"/>
+    <path d="m205 656 350-37v180l-350 44z" fill="#314B63"/>
+    <path d="m120 606 85 50v187l-85-55z" fill="#263D54"/>
+    <path d="m153 618 30 18v166l-30-19z" fill="#8198A9"/>
+    <path d="m205 656 350-37v25l-350 39z" fill="#56B7F1"/>
+    <path d="m235 691 29-3v51l-29 4zm63-7 29-3v51l-29 4zm63-7 29-3v51l-29 4zm63-7 29-3v51l-29 4zm63-7 29-3v51l-29 4z" fill="#172A3D"/>
+    <circle cx="249" cy="714" r="8" fill="#A6DDFC"/>
+    <circle cx="312" cy="707" r="8" fill="#A6DDFC"/>
+    <circle cx="375" cy="700" r="8" fill="#A6DDFC"/>
+    <circle cx="438" cy="693" r="8" fill="#A6DDFC"/>
+    <circle cx="501" cy="686" r="8" fill="#A6DDFC"/>
+    <path d="m255 557 174-16 38 23-178 18z" fill="url(#steel)"/>
+    <path d="m289 582 178-18v74l-178 19z" fill="#42617A"/>
+    <path d="m305 594 66-7v41l-66 7z" fill="#203B59"/>
+    <path d="m380 587 49-5v41l-49 5z" fill="#243F57"/>
+    <path d="m314 601 49-5v23l-49 5z" fill="#64C1F5"/>
+    <circle cx="444" cy="570" r="8" fill="#E8AF5B"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="m575 564 362-34 91 51-364 40z" fill="#738A9C"/>
+    <path d="m664 621 364-40v202l-364 46z" fill="#344F67"/>
+    <path d="m575 568 89 53v208l-89-58z" fill="#273E55"/>
+    <path d="m664 621 364-40v27l-364 42z" fill="#56B7F1"/>
+    <path d="m702 678 288-31v116l-288 35z" fill="#1C3045"/>
+    <path d="m730 690 74-8v82l-74 9zm96-10 74-8v82l-74 9zm96-10 43-5v82l-43 5z" fill="#263E55"/>
+    <path d="m744 702 44-5v58l-44 5z" stroke="#67B8E9" stroke-opacity=".8" stroke-width="3"/>
+    <path d="m840 692 44-5v58l-44 5z" stroke="#67B8E9" stroke-opacity=".8" stroke-width="3"/>
+    <path d="m936 682 25-3v58l-25 3z" stroke="#67B8E9" stroke-opacity=".8" stroke-width="3"/>
+    <circle cx="690" cy="659" r="7" fill="#58D69B"/>
+    <circle cx="716" cy="656" r="7" fill="#F4B860"/>
+    <circle cx="742" cy="653" r="7" fill="#E0786A"/>
+    <path d="m719 494 142-13 42 25-144 16z" fill="url(#steel)"/>
+    <path d="m759 522 144-16v51l-144 17z" fill="#49677F"/>
+    <path d="m790 473 72-7 29 17-73 8z" fill="#243D55"/>
+    <path d="m804 455 16-2v20l-16 2z" fill="#A5BBCB"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="m1078 530 245-25 66 38-248 28z" fill="#667F92"/>
+    <path d="m1141 571 248-28v196l-248 34z" fill="#2C465E"/>
+    <path d="m1078 533 63 38v202l-63-46z" fill="#20384F"/>
+    <path d="m1141 571 248-28v26l-248 31z" fill="#56B7F1"/>
+    <path d="m1180 626 172-20v112l-172 23z" fill="#1A3045"/>
+    <path d="m1200 640 131-15v76l-131 18z" fill="#435E75"/>
+    <path d="m1210 648 111-13v58l-111 15z" fill="#233D55"/>
+    <path d="m1181 601 88-10v12l-88 10z" fill="#9DB0BE"/>
+    <circle cx="1370" cy="566" r="7" fill="#58D69B"/>
+    <path d="m1230 497 76-8v26l-76 9z" fill="#16293C"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="m951 567 14-65 45-49 26 15-42 56-5 51z" fill="url(#orange)"/>
+    <path d="m994 471 24-48 63-40 20 25-59 42-21 38z" fill="#F39A48"/>
+    <path d="m1066 390 50-50 26 21-39 50-38 17z" fill="url(#orange)"/>
+    <path d="m1111 350 33-47 18 11-20 53-26 17z" fill="#F4AC5D"/>
+    <path d="m1148 303 32-23 12 9-20 35-21 15z" fill="#E97833"/>
+    <path d="m1169 281 21-11 4 8-15 21-14 6z" fill="#F0B56A"/>
+    <circle cx="1005" cy="468" r="18" fill="#FFD08A"/>
+    <circle cx="1090" cy="397" r="17" fill="#F3B463"/>
+    <circle cx="1148" cy="315" r="15" fill="#FFD08A"/>
+    <path d="m927 561 83-9 22 14-84 10z" fill="#8BA1B1"/>
+    <path d="m950 576 84-10v20l-84 10z" fill="#344E65"/>
+  </g>
+
+  <g>
+    <path d="m538 622 30-3v118l-30 4zm-14 122 54-6v16l-54 7z" fill="#1D3348"/>
+    <circle cx="539" cy="752" r="9" fill="#7A91A3"/>
+    <circle cx="571" cy="748" r="9" fill="#7A91A3"/>
+    <path d="m1020 601 30-4v119l-30 4zm-13 123 54-7v16l-54 7z" fill="#1D3348"/>
+    <circle cx="1021" cy="732" r="9" fill="#7A91A3"/>
+    <circle cx="1053" cy="728" r="9" fill="#7A91A3"/>
+  </g>
+
+  <g opacity=".95">
+    <path d="M106 324h235v105H106z" fill="#101F33" fill-opacity=".8" stroke="#8FB7D1" stroke-opacity=".36"/>
+    <circle cx="137" cy="355" r="8" fill="#58D69B"/>
+    <path d="M157 350h147M157 370h104M126 397h190" stroke="#9BB4C7" stroke-opacity=".46" stroke-width="5" stroke-linecap="round"/>
+    <path d="M1115 143h220v114h-220z" fill="#101F33" fill-opacity=".82" stroke="#8FB7D1" stroke-opacity=".36"/>
+    <path d="M1143 223v-26l26-18 23 9 26-29 24 13 29-18 36 11" stroke="#59BAF0" stroke-width="4"/>
+    <path d="M1143 233h169" stroke="#8FB7D1" stroke-opacity=".3" stroke-width="2"/>
+    <circle cx="1317" cy="165" r="6" fill="#58D69B"/>
+    <path d="m1215 146 13-24 13 24z" fill="#F4B860"/>
+    <path d="M1183 153v-9m-5 4h10" stroke="#F4B860" stroke-width="2"/>
+    <path d="m1183 246 25 0" stroke="#58D69B" stroke-width="3" stroke-linecap="round"/>
+    <text x="1143" y="184" fill="#D8EAFB" font-family="Arial,sans-serif" font-size="12" font-weight="700">ENERGY TREND</text>
+  </g>
+
+  <g fill="#D8EAFB" font-family="Arial,sans-serif">
+    <text x="111" y="300" font-size="15" font-weight="700" letter-spacing="2">STASIUN PRODUKSI</text>
+    <text x="115" y="450" fill-opacity=".55" font-size="11" letter-spacing="1.4">GAMBARAN ILUSTRATIF · ENERGI · MESIN · OUTPUT</text>
+  </g>
+  <path d="M108 466h268" stroke="#8FB7D1" stroke-opacity=".25"/>
+</svg>
