@@ -1,11 +1,15 @@
 {{-- Live Monitor Widget — polling tiap 5 detik --}}
-<section aria-label="Live Monitor IoT" class="mt-6">
-    <div class="mb-3 flex items-center justify-between">
+<section aria-label="Live Monitor IoT" class="mb-5">
+    <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <h2 class="text-base font-bold text-navy-900">Live Monitor</h2>
+            <p class="mt-1 text-xs text-slate-500">Pembacaan terbaru dari perangkat IoT.</p>
+        </div>
         <div class="flex items-center gap-2">
             <span id="live-dot" class="h-2.5 w-2.5 rounded-full bg-gray-300"></span>
-            <h2 class="text-sm font-semibold text-slate-700">Live Monitor</h2>
+            <span class="sr-only">Status pembaruan</span>
+            <span id="live-timestamp" class="text-xs text-slate-500">Menghubungkan...</span>
         </div>
-        <span id="live-timestamp" class="text-xs text-slate-400">Menghubungkan...</span>
     </div>
 
     <div id="live-cards" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

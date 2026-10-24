@@ -40,43 +40,53 @@
         </x-ui.button>
     </div>
 
-    <form method="GET" action="{{ route($key.'.index') }}" class="app-card mb-4 flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
-        <label class="relative min-w-0 flex-1">
-            <span class="sr-only">Cari {{ strtolower($label) }}</span>
-            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
-            <input type="search" name="search" value="{{ $search }}" placeholder="Cari {{ strtolower($label) }}..." class="app-input pl-9">
-        </label>
-        @if (count($filterOptions))
-            <label class="sm:w-56">
-                <span class="sr-only">Filter {{ $filterLabel }}</span>
-                <select name="filter" class="app-input">
-                    <option value="">Semua status / sumber</option>
-                    @foreach ($filterOptions as $option)
-                        <option value="{{ $option }}" @selected($filter === $option)>{{ strtolower($option) === 'iot' ? 'IoT' : str($option)->replace('_', ' ')->title() }}</option>
+    <form method="GET" action="{{ route($key.'.index') }}" class="app-card mb-4 p-4">
+        <div class="mb-3">
+            <h2 class="text-sm font-bold text-navy-900">Pencarian &amp; filter</h2>
+            <p class="mt-1 text-xs text-slate-500">Temukan data, pilih filter, atau atur urutan tampilan.</p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <label class="min-w-0 sm:flex-[2_1_280px]">
+                <span class="app-label">Cari {{ strtolower($label) }}</span>
+                <span class="relative block">
+                    <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+                    <input type="search" name="search" value="{{ $search }}" placeholder="Cari {{ strtolower($label) }}..." class="app-input pl-10">
+                </span>
+            </label>
+            @if (count($filterOptions))
+                <label class="min-w-0 sm:w-52 sm:shrink-0">
+                    <span class="app-label">{{ $filterLabel }}</span>
+                    <select name="filter" class="app-input">
+                        <option value="">Semua status / sumber</option>
+                        @foreach ($filterOptions as $option)
+                            <option value="{{ $option }}" @selected($filter === $option)>{{ strtolower($option) === 'iot' ? 'IoT' : str($option)->replace('_', ' ')->title() }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            @endif
+            <label class="min-w-0 sm:w-44 sm:shrink-0">
+                <span class="app-label">Urutkan berdasarkan</span>
+                <select name="sort" class="app-input">
+                    <option value="">Urutan terbaru</option>
+                    @foreach ($sortable as $column)
+                        <option value="{{ $column }}" @selected($sort === $column)>{{ str($column)->replace('_', ' ')->title() }}</option>
                     @endforeach
                 </select>
             </label>
-        @endif
-        <label class="sm:w-48">
-            <span class="sr-only">Urutkan berdasarkan</span>
-            <select name="sort" class="app-input">
-                <option value="">Urutan terbaru</option>
-                @foreach ($sortable as $column)
-                    <option value="{{ $column }}" @selected($sort === $column)>{{ str($column)->replace('_', ' ')->title() }}</option>
-                @endforeach
-            </select>
-        </label>
-        <label class="sm:w-32">
-            <span class="sr-only">Arah pengurutan</span>
-            <select name="direction" class="app-input">
-                <option value="desc" @selected($direction === 'desc')>Menurun</option>
-                <option value="asc" @selected($direction === 'asc')>Menaik</option>
-            </select>
-        </label>
-        <x-ui.button type="submit" variant="secondary">Terapkan</x-ui.button>
-        @if ($search || $filter || $sort)
-            <a href="{{ route($key.'.index') }}" class="px-2 py-2 text-sm font-semibold text-brand-700 hover:text-brand-900">Reset</a>
-        @endif
+            <label class="min-w-0 sm:w-32 sm:shrink-0">
+                <span class="app-label">Arah urutan</span>
+                <select name="direction" class="app-input">
+                    <option value="desc" @selected($direction === 'desc')>Menurun</option>
+                    <option value="asc" @selected($direction === 'asc')>Menaik</option>
+                </select>
+            </label>
+            <div class="flex items-center gap-2 sm:pb-px">
+                <x-ui.button type="submit" variant="secondary">Terapkan</x-ui.button>
+                @if ($search || $filter || $sort)
+                    <a href="{{ route($key.'.index') }}" class="rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50 hover:text-brand-900">Reset</a>
+                @endif
+            </div>
+        </div>
     </form>
 
     <x-ui.table>

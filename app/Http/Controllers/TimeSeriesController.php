@@ -14,11 +14,11 @@ class TimeSeriesController extends Controller
             ->orderBy('device_id')
             ->get(['device_id', 'machine_code']);
 
-        $pageTitle       = 'Time Series IoT';
-        $pageDescription = 'Visualisasi arus dan daya dari data telemetri IoT, dapat difilter per menit, hari, atau bulan.';
+        $pageTitle       = 'IoT Monitoring';
+        $pageDescription = 'Pemantauan historis arus dan daya dari telemetri perangkat IoT yang tersimpan.';
         $breadcrumbs     = [
             ['label' => 'Dashboard', 'url' => route('dashboard')],
-            ['label' => 'Time Series IoT'],
+            ['label' => 'IoT Monitoring'],
         ];
 
         return view('time-series.index', compact(

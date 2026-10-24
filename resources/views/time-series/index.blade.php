@@ -2,138 +2,144 @@
 
 @section('content')
 
-{{-- ─── Filter Bar ─────────────────────────────────────────────────────── --}}
-<div class="app-card mb-5 p-4">
-    <div class="flex flex-wrap items-end gap-3">
+@include('partials.live-monitor')
 
-        {{-- Interval --}}
-        <label class="flex flex-col gap-1">
-            <span class="app-label">Resolusi</span>
-            <select id="ts-interval" class="app-input">
-                <option value="minute">Per Menit</option>
-                <option value="day" selected>Per Hari</option>
-                <option value="month">Per Bulan</option>
-            </select>
-        </label>
-
-        {{-- Tanggal (menit / hari) --}}
-        <label id="wrap-date" class="flex flex-col gap-1">
-            <span class="app-label">Tanggal</span>
-            <input id="ts-date" class="app-input" type="date" value="{{ now()->toDateString() }}">
-        </label>
-
-        {{-- Bulan / Tahun (mode month) --}}
-        <label id="wrap-month" class="hidden flex-col gap-1">
-            <span class="app-label">Bulan</span>
-            <input id="ts-month" class="app-input" type="month" value="{{ now()->format('Y-m') }}">
-        </label>
-
-        {{-- Device ID --}}
-        <label class="flex flex-col gap-1">
-            <span class="app-label">Device ID <span class="font-normal text-slate-400">(opsional)</span></span>
-            <input id="ts-device" class="app-input" type="text" placeholder="Semua perangkat" list="device-list">
-            <datalist id="device-list">
-                @foreach($devices as $dev)
-                    <option value="{{ $dev->device_id }}">{{ $dev->device_id }}{{ $dev->machine_code ? ' · '.$dev->machine_code : '' }}</option>
-                @endforeach
-            </datalist>
-        </label>
-
-        <button id="ts-load" class="app-button" type="button">Tampilkan</button>
-    </div>
-</div>
-
-{{-- ─── KPI Cards ───────────────────────────────────────────────────────── --}}
-<div class="mb-5 grid gap-3 sm:grid-cols-2">
-    <div class="app-card flex items-center gap-4 p-5">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 font-bold text-sm">A</div>
-        <div class="min-w-0">
-            <p class="text-xs text-slate-500">Arus rata-rata</p>
-            <p id="kpi-current-val" class="mt-0.5 text-2xl font-extrabold tracking-tight text-navy-900">—</p>
-            <p class="text-xs text-slate-400">Rata-rata current_a pada periode</p>
+<section class="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-100 bg-navy-900 px-5 py-5 text-white sm:px-7 sm:py-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="max-w-2xl">
+                <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-100">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 8L9 4l-3 8H2"/></svg>
+                    Telemetri tersimpan
+                </div>
+                <h2 class="text-xl font-bold tracking-tight sm:text-2xl">Pantau performa kelistrikan mesin</h2>
+                <p class="mt-2 max-w-xl text-sm leading-6 text-blue-100/80">Telusuri tren arus dan daya berdasarkan periode pengukuran dan perangkat. Data ditampilkan dari telemetri IoT yang tersimpan.</p>
+            </div>
+            <div class="rounded-xl border border-white/15 bg-white/10 px-4 py-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-blue-100/70">Bucket terbaru</p>
+                <p id="ts-latest-period" class="mt-1 text-sm font-semibold text-white">Belum dimuat</p>
+            </div>
         </div>
     </div>
-    <div class="app-card flex items-center gap-4 p-5">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold text-sm">W</div>
-        <div class="min-w-0">
-            <p class="text-xs text-slate-500">Daya rata-rata</p>
-            <p id="kpi-power-val" class="mt-0.5 text-2xl font-extrabold tracking-tight text-navy-900">—</p>
-            <p class="text-xs text-slate-400">Rata-rata power_w pada periode</p>
-        </div>
-    </div>
-</div>
 
-{{-- ─── Charts ──────────────────────────────────────────────────────────── --}}
-<div class="mb-5 grid gap-4 lg:grid-cols-2">
-
-    {{-- Chart Arus --}}
-    <section class="app-card p-5">
-        <div class="mb-4 flex items-start justify-between gap-2">
+    <div class="p-4 sm:p-5">
+        <div class="mb-4 flex items-center justify-between gap-3">
             <div>
-                <h2 class="text-base font-bold text-navy-900">Arus (A)</h2>
-                <p class="mt-0.5 text-xs text-slate-500">Nilai rata-rata <code>current_a</code> dari payload IoT per bucket waktu</p>
+                <h3 class="text-sm font-bold text-navy-900">Parameter pemantauan</h3>
+                <p class="mt-1 text-xs text-slate-500">Pilih resolusi waktu dan perangkat, lalu muat data.</p>
             </div>
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-800">
-                <span class="h-2 w-2 rounded-full bg-brand-600"></span>A
-            </span>
+            <p id="ts-status" role="status" aria-live="polite" class="text-right text-xs text-slate-500">Menunggu filter untuk memuat data.</p>
         </div>
-        <div class="relative h-56 overflow-x-auto">
-            <div id="chart-current-empty" class="absolute inset-0 flex items-center justify-center">
-                <p class="text-sm text-slate-400">Tekan <strong>Tampilkan</strong> untuk memuat data.</p>
-            </div>
-            <svg id="chart-current-svg" class="hidden h-full min-w-[480px] w-full" viewBox="0 0 720 200" role="img" aria-label="Grafik arus"></svg>
+        <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1.4fr_auto]">
+            <label class="min-w-0">
+                <span class="app-label">Resolusi</span>
+                <select id="ts-interval" class="app-input">
+                    <option value="minute">Per Menit</option>
+                    <option value="day" selected>Per Hari</option>
+                    <option value="month">Per Bulan</option>
+                </select>
+            </label>
+            <label id="wrap-date" class="flex min-w-0 flex-col">
+                <span class="app-label">Tanggal</span>
+                <input id="ts-date" class="app-input" type="date" value="{{ now()->toDateString() }}">
+            </label>
+            <label id="wrap-month" class="hidden min-w-0 flex-col">
+                <span class="app-label">Bulan</span>
+                <input id="ts-month" class="app-input" type="month" value="{{ now()->format('Y-m') }}">
+            </label>
+            <label class="min-w-0">
+                <span class="app-label">Device ID <span class="font-normal text-slate-400">(opsional)</span></span>
+                <input id="ts-device" class="app-input" type="text" placeholder="Semua perangkat" list="device-list">
+                <datalist id="device-list">
+                    @foreach($devices as $dev)
+                        <option value="{{ $dev->device_id }}">{{ $dev->device_id }}{{ $dev->machine_code ? ' · '.$dev->machine_code : '' }}</option>
+                    @endforeach
+                </datalist>
+            </label>
+            <button id="ts-load" class="app-button app-button-primary w-full sm:col-span-2 xl:col-span-1" type="button">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-14.9-4M4 4v4h4M4 13a8.1 8.1 0 0 0 14.9 4M20 20v-4h-4"/></svg>
+                <span id="ts-load-label">Tampilkan</span>
+            </button>
         </div>
-        <div id="chart-current-labels" class="mt-1 flex justify-between text-xs text-slate-400"></div>
-    </section>
-
-    {{-- Chart Daya --}}
-    <section class="app-card p-5">
-        <div class="mb-4 flex items-start justify-between gap-2">
-            <div>
-                <h2 class="text-base font-bold text-navy-900">Daya (W)</h2>
-                <p class="mt-0.5 text-xs text-slate-500">Nilai rata-rata <code>power_w</code> dari payload IoT per bucket waktu</p>
-            </div>
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-                <span class="h-2 w-2 rounded-full bg-amber-500"></span>W
-            </span>
-        </div>
-        <div class="relative h-56 overflow-x-auto">
-            <div id="chart-power-empty" class="absolute inset-0 flex items-center justify-center">
-                <p class="text-sm text-slate-400">Tekan <strong>Tampilkan</strong> untuk memuat data.</p>
-            </div>
-            <svg id="chart-power-svg" class="hidden h-full min-w-[480px] w-full" viewBox="0 0 720 200" role="img" aria-label="Grafik daya"></svg>
-        </div>
-        <div id="chart-power-labels" class="mt-1 flex justify-between text-xs text-slate-400"></div>
-    </section>
-</div>
-
-{{-- ─── Tabel Data ──────────────────────────────────────────────────────── --}}
-<section class="app-card">
-    <div class="flex items-center justify-between px-5 py-4">
-        <h2 class="text-base font-bold text-navy-900">Tabel Data</h2>
-        <button id="ts-export" type="button" class="app-button-secondary text-xs" disabled>Ekspor CSV</button>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                <tr>
-                    <th class="px-4 py-3 text-left">Periode</th>
-                    <th class="px-4 py-3 text-right">Arus (A)</th>
-                    <th class="px-4 py-3 text-right">Daya (W)</th>
-                </tr>
+</section>
+
+<section aria-label="Ringkasan telemetri" class="mb-5 grid gap-3 sm:grid-cols-2">
+    <article class="app-card flex items-center gap-4 p-4 sm:p-5">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 8L9 4l-3 8H2"/></svg>
+        </span>
+        <div class="min-w-0">
+            <p class="text-xs font-semibold text-slate-500">Arus rata-rata</p>
+            <p id="kpi-current-val" class="mt-1 text-2xl font-extrabold tracking-tight text-navy-900">—</p>
+            <p class="mt-1 text-xs text-slate-400">Nilai rata-rata current_a pada hasil filter</p>
+        </div>
+    </article>
+    <article class="app-card flex items-center gap-4 p-4 sm:p-5">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 2-3 8h7l-6 12 1-9H5l8-11Z"/></svg>
+        </span>
+        <div class="min-w-0">
+            <p class="text-xs font-semibold text-slate-500">Daya rata-rata</p>
+            <p id="kpi-power-val" class="mt-1 text-2xl font-extrabold tracking-tight text-navy-900">—</p>
+            <p class="mt-1 text-xs text-slate-400">Nilai rata-rata power_w pada hasil filter</p>
+        </div>
+    </article>
+</section>
+
+<section class="app-card mb-5 overflow-hidden">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+        <div>
+            <h2 class="text-base font-bold text-navy-900">Tren arus dan daya</h2>
+            <p class="mt-1 text-xs text-slate-500">Rata-rata nilai telemetry per bucket waktu.</p>
+        </div>
+        <button id="ts-export" type="button" class="app-button-secondary inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold" disabled>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Ekspor CSV
+        </button>
+    </div>
+    <div class="grid gap-4 p-4 sm:p-5">
+        <article class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/60 p-3 sm:p-4">
+            <div class="mb-3 flex items-start justify-between gap-2">
+                <div><h3 class="text-sm font-bold text-navy-900">Arus listrik</h3><p class="mt-1 text-xs text-slate-500">current_a · Ampere (A)</p></div>
+                <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-800"><span class="h-2 w-2 rounded-full bg-brand-600"></span>Arus</span>
+            </div>
+            <div class="relative h-64 overflow-x-auto rounded-lg bg-white">
+                <div id="chart-current-empty" class="absolute inset-0 flex items-center justify-center px-4 text-center"><p class="text-sm text-slate-400">Pilih filter lalu tekan Tampilkan untuk memuat data.</p></div>
+                <svg id="chart-current-svg" class="hidden h-full min-w-[600px] w-full" viewBox="0 0 720 200" role="img" aria-label="Grafik arus listrik dalam ampere"></svg>
+            </div>
+            <div id="chart-current-labels" class="mt-2 flex justify-between gap-2 text-[11px] text-slate-500"></div>
+        </article>
+        <article class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/60 p-3 sm:p-4">
+            <div class="mb-3 flex items-start justify-between gap-2">
+                <div><h3 class="text-sm font-bold text-navy-900">Daya aktif</h3><p class="mt-1 text-xs text-slate-500">power_w · Watt (W)</p></div>
+                <span class="inline-flex items-center gap-2 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Daya</span>
+            </div>
+            <div class="relative h-64 overflow-x-auto rounded-lg bg-white">
+                <div id="chart-power-empty" class="absolute inset-0 flex items-center justify-center px-4 text-center"><p class="text-sm text-slate-400">Pilih filter lalu tekan Tampilkan untuk memuat data.</p></div>
+                <svg id="chart-power-svg" class="hidden h-full min-w-[600px] w-full" viewBox="0 0 720 200" role="img" aria-label="Grafik daya aktif dalam watt"></svg>
+            </div>
+            <div id="chart-power-labels" class="mt-2 flex justify-between gap-2 text-[11px] text-slate-500"></div>
+        </article>
+    </div>
+</section>
+
+<section class="app-card overflow-hidden">
+    <div class="border-b border-slate-100 px-4 py-4 sm:px-5">
+        <h2 class="text-base font-bold text-navy-900">Rincian pengukuran</h2>
+        <p class="mt-1 text-xs text-slate-500">Nilai rata-rata arus dan daya untuk setiap bucket pada periode terpilih.</p>
+    </div>
+    <div class="max-h-[60vh] overflow-auto overscroll-contain">
+        <table class="w-full min-w-[520px] text-sm">
+            <thead class="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                <tr><th class="px-4 py-3 text-left sm:px-5">Periode</th><th class="px-4 py-3 text-right sm:px-5">Arus (A)</th><th class="px-4 py-3 text-right sm:px-5">Daya (W)</th></tr>
             </thead>
             <tbody id="ts-tbody" class="divide-y divide-slate-100 text-slate-700">
-                <tr>
-                    <td colspan="3" class="py-10 text-center text-sm text-slate-400">
-                        Belum ada data. Pilih filter lalu tekan Tampilkan.
-                    </td>
-                </tr>
+                <tr><td colspan="3" class="py-10 text-center text-sm text-slate-400">Belum ada data. Pilih filter lalu tekan Tampilkan.</td></tr>
             </tbody>
         </table>
     </div>
-    <div class="border-t border-slate-100 px-5 py-3">
-        <p id="ts-count" class="text-xs text-slate-400">—</p>
-    </div>
+    <div class="border-t border-slate-100 px-4 py-3 sm:px-5"><p id="ts-count" class="text-xs text-slate-500">—</p></div>
 </section>
 
 {{-- ─── Script ──────────────────────────────────────────────────────────── --}}
@@ -147,9 +153,12 @@
     const elMonth    = document.getElementById('ts-month');
     const elDevice   = document.getElementById('ts-device');
     const elLoad     = document.getElementById('ts-load');
+    const elLoadLabel = document.getElementById('ts-load-label');
     const elExport   = document.getElementById('ts-export');
     const elTbody    = document.getElementById('ts-tbody');
     const elCount    = document.getElementById('ts-count');
+    const elStatus   = document.getElementById('ts-status');
+    const elLatestPeriod = document.getElementById('ts-latest-period');
     const wrapDate   = document.getElementById('wrap-date');
     const wrapMonth  = document.getElementById('wrap-month');
     const kpiCurr    = document.getElementById('kpi-current-val');
@@ -253,12 +262,22 @@
         labels.innerHTML = picks.map(i => `<span>${points[i].period}</span>`).join('');
     }
 
+    function showChartMessage(svgId, emptyId, labelsId, message) {
+        document.getElementById(svgId).classList.add('hidden');
+        const empty = document.getElementById(emptyId);
+        empty.classList.remove('hidden');
+        empty.querySelector('p').textContent = message;
+        document.getElementById(labelsId).innerHTML = '';
+    }
+
     /* ── Fetch & render ───────────────────────────────────────────────── */
     let lastData = [];
 
     async function load() {
         elLoad.disabled    = true;
-        elLoad.textContent = 'Memuat…';
+        elLoad.setAttribute('aria-busy', 'true');
+        elLoadLabel.textContent = 'Memuat…';
+        elStatus.textContent = 'Sedang memuat data dari telemetri tersimpan…';
 
         const interval = elInterval.value;
         const device   = elDevice.value.trim();
@@ -282,12 +301,20 @@
             const json = await res.json();
             lastData = json.data ?? [];
         } catch (err) {
-            elTbody.innerHTML = `<tr><td colspan="3"
-                class="py-8 text-center text-sm text-red-500">
-                Gagal memuat data: ${err.message}</td></tr>`;
+            lastData = [];
+            elTbody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-sm text-red-600"><span id="ts-load-error"></span></td></tr>';
+            document.getElementById('ts-load-error').textContent = `Gagal memuat data: ${err.message}`;
             elCount.textContent = '—';
+            elExport.disabled = true;
+            kpiCurr.textContent = '—';
+            kpiPow.textContent = '—';
+            elLatestPeriod.textContent = 'Tidak tersedia';
+            elStatus.textContent = 'Permintaan gagal. Periksa koneksi lalu coba lagi.';
+            showChartMessage('chart-current-svg', 'chart-current-empty', 'chart-current-labels', 'Data gagal dimuat. Silakan coba lagi.');
+            showChartMessage('chart-power-svg', 'chart-power-empty', 'chart-power-labels', 'Data gagal dimuat. Silakan coba lagi.');
             elLoad.disabled    = false;
-            elLoad.textContent = 'Tampilkan';
+            elLoad.removeAttribute('aria-busy');
+            elLoadLabel.textContent = 'Tampilkan';
             return;
         }
 
@@ -328,8 +355,13 @@
 
         elCount.textContent = `${lastData.length} bucket ditampilkan`;
         elExport.disabled   = lastData.length === 0;
+        elLatestPeriod.textContent = lastData.length ? lastData[lastData.length - 1].period : 'Tidak ada data';
+        elStatus.textContent = lastData.length
+            ? `${lastData.length} bucket dimuat · ${new Date().toLocaleString('id-ID')}`
+            : 'Tidak ada data pada periode dan filter ini.';
         elLoad.disabled     = false;
-        elLoad.textContent  = 'Tampilkan';
+        elLoad.removeAttribute('aria-busy');
+        elLoadLabel.textContent = 'Tampilkan';
     }
 
     elLoad.addEventListener('click', load);

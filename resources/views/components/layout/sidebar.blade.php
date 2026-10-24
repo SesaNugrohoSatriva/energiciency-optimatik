@@ -24,6 +24,7 @@
                 ]],
                 ['title' => 'Energy management', 'items' => [
                     ['route' => 'energy-records.index', 'label' => 'Energy monitoring', 'icon' => 'bolt'],
+                    ['route' => 'time-series.index', 'label' => 'IoT Monitoring', 'icon' => 'activity'],
                     ['route' => 'costing', 'label' => 'Energy costing', 'icon' => 'currency'],
                 ]],
                 ['title' => null, 'items' => [['route' => 'inventory.index', 'label' => 'Inventory', 'icon' => 'box']]],
@@ -53,6 +54,7 @@
                                     @case('machine') <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M7 7V4h10v3M7 12h3M7 16h3M15 12h2v4h-2z"/> @break
                                     @case('wrench') <path d="M14.5 6.5a5 5 0 0 0-6.7 6.7l-4.9 4.9a2 2 0 0 0 2.8 2.8l4.9-4.9a5 5 0 0 0 6.7-6.7l-3 3-3.5-3.5 3.7-2.3Z"/> @break
                                     @case('bolt') <path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z"/> @break
+                                    @case('activity') <path d="M22 12h-4l-3 8L9 4l-3 8H2"/> @break
                                     @case('currency') <circle cx="12" cy="12" r="9"/><path d="M16 8.5c-.7-.8-1.8-1.2-3.2-1.2-1.8 0-3 .9-3 2.2 0 3.5 6.5 1.3 6.5 4.8 0 1.4-1.3 2.4-3.3 2.4-1.5 0-2.8-.5-3.7-1.5M12 5v14"/> @break
                                     @case('box') <path d="m12 3 9 5v9l-9 5-9-5V8l9-5Z"/><path d="m3 8 9 5 9-5M12 13v9"/> @break
                                     @case('chart') <path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 6-7"/><circle cx="7" cy="15" r="1"/><circle cx="11" cy="11" r="1"/><circle cx="14" cy="13" r="1"/><circle cx="20" cy="6" r="1"/> @break

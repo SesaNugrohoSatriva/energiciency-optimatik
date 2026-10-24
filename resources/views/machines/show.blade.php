@@ -39,7 +39,7 @@
     </nav>
 
     <form method="GET" action="{{ route('machines.show', $machine->id) }}" class="app-card mb-5 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label><span class="app-label">Cari event, device, atau order</span><input class="app-input" type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Event ID, device, order..."></label>
+        <label class="sm:col-span-2"><span class="app-label">Cari event, device, atau order</span><span class="relative block"><svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg><input class="app-input pl-10" type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Event ID, device, order..."></span></label>
         <label><span class="app-label">Dari tanggal</span><input class="app-input" type="date" name="from" value="{{ $filters['from'] }}"></label>
         <label><span class="app-label">Sampai tanggal</span><input class="app-input" type="date" name="to" value="{{ $filters['to'] }}"></label>
         <label><span class="app-label">Sumber</span><select class="app-input" name="source"><option value="">Semua sumber</option>@foreach (['simulation' => 'Simulasi', 'manual' => 'Manual', 'iot' => 'IoT'] as $value => $label)<option value="{{ $value }}" @selected(($filters['source'] ?? '') === $value)>{{ $label }}</option>@endforeach</select></label>
