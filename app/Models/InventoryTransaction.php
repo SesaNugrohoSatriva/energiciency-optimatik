@@ -21,11 +21,6 @@ class InventoryTransaction extends Model
         return $this->belongsTo(InventoryItem::class);
     }
 
-    public function batch(): BelongsTo
-    {
-        return $this->belongsTo(ProductionBatch::class, 'production_batch_id');
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

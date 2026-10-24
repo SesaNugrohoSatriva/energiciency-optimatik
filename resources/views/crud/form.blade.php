@@ -4,16 +4,15 @@
     @php
         $editing = $record->exists;
         $lockedOrder = $key === 'production-orders' && $editing && $record->batches()->exists();
-        $lockedOrderFields = ['product_id','bom_id','product_routing_id','status','actual_quantity','good_quantity'];
+        $lockedOrderFields = ['product_id','product_routing_id','status','actual_quantity','good_quantity'];
         $schemas = [
             'machines' => ['code'=>'Kode mesin','name'=>'Nama mesin','category'=>'Kategori','location'=>'Lokasi/workstation','capacity'=>'Kapasitas','capacity_unit'=>'Satuan kapasitas','rated_kw'=>'Daya nominal (kW)','target_oee'=>'Target OEE (%)','status'=>'Status operasional','device_id'=>'ID perangkat'],
             'processes' => ['code'=>'Kode proses','name'=>'Nama proses','machine_id'=>'Mesin/workstation utama','setup_time_minutes'=>'Waktu setup (menit)','ideal_cycle_seconds'=>'Siklus ideal (detik/unit)','labor_required'=>'Tenaga kerja per operasi','capacity'=>'Kapasitas proses','capacity_unit'=>'Satuan kapasitas','estimated_kwh'=>'Estimasi energi (kWh)','work_instructions'=>'Instruksi kerja','quality_criteria'=>'Kriteria kualitas','description'=>'Deskripsi'],
             'products' => ['sku'=>'SKU / kode produk','name'=>'Nama produk','description'=>'Deskripsi','category'=>'Kategori','base_unit'=>'Satuan dasar','is_active'=>'Status produk','batch_size'=>'Ukuran batch standar','target_oee'=>'Target OEE (%)','estimated_production_minutes'=>'Estimasi durasi (menit)','estimated_energy_kwh'=>'Estimasi energi (kWh)','simulation_status'=>'Keterangan simulasi','material_cost'=>'Biaya material dasar','labor_cost'=>'Biaya tenaga kerja','overhead_cost'=>'Biaya overhead'],
-            'production-orders' => ['order_number'=>'Nomor order','product_id'=>'Produk','bom_id'=>'Snapshot BOM aktif','product_routing_id'=>'Snapshot routing aktif','status'=>'Status','planned_quantity'=>'Kuantitas rencana','actual_quantity'=>'Kuantitas aktual','good_quantity'=>'Kuantitas baik','scheduled_at'=>'Tanggal rencana'],
+            'production-orders' => ['order_number'=>'Nomor order','product_id'=>'Produk','product_routing_id'=>'Snapshot routing aktif','status'=>'Status','planned_quantity'=>'Kuantitas rencana','actual_quantity'=>'Kuantitas aktual','good_quantity'=>'Kuantitas baik','scheduled_at'=>'Tanggal rencana'],
             'inventory' => ['sku'=>'SKU','name'=>'Nama item','category'=>'Kategori','quantity'=>'Jumlah stok','threshold'=>'Batas minimum','unit'=>'Satuan','unit_cost'=>'Biaya per unit','location'=>'Lokasi'],
             'maintenance-logs' => ['machine_id'=>'Mesin','issue'=>'Masalah','priority'=>'Prioritas','status'=>'Status','scheduled_at'=>'Tanggal jadwal','notes'=>'Catatan'],
             'energy-records' => ['machine_id'=>'Mesin terkait','process_id'=>'Proses terkait','production_order_id'=>'Order produksi terkait','production_batch_id'=>'Batch produksi terkait','routing_operation_id'=>'Operasi routing terkait','device_id'=>'ID perangkat','kwh'=>'Energi (kWh)','tariff_per_kwh'=>'Tarif per kWh','recorded_at'=>'Waktu pengukuran','source'=>'Sumber data','external_event_id'=>'ID event eksternal'],
-            'bom-items' => ['product_id'=>'Produk','bom_id'=>'Versi BOM (draft)','inventory_item_id'=>'Item inventory terkait','component_sku'=>'SKU komponen','component_name'=>'Nama komponen','quantity_per_unit'=>'Jumlah per output BOM','scrap_allowance_percent'=>'Allowance scrap (%)','unit'=>'Satuan','unit_cost'=>'Biaya referensi per unit','supplier'=>'Pemasok'],
             'oee-records' => ['machine_id'=>'Mesin','production_batch_id'=>'Batch produksi terkait','routing_operation_id'=>'Operasi routing terkait','recorded_on'=>'Tanggal catatan','planned_minutes'=>'Waktu terencana (menit)','operating_minutes'=>'Waktu operasi (menit)','ideal_cycle_minutes'=>'Siklus ideal (menit/unit)','total_output'=>'Total output','good_output'=>'Output baik','notes'=>'Catatan'],
         ];
         $required = [
@@ -22,7 +21,6 @@
             'inventory'=>['sku','name','quantity','threshold','unit','unit_cost'],
             'maintenance-logs'=>['machine_id','issue','priority','status'],
             'energy-records'=>['kwh','tariff_per_kwh','recorded_at','source'],
-            'bom-items'=>['product_id','component_sku','component_name','quantity_per_unit','unit','unit_cost'],
             'oee-records'=>['machine_id','recorded_on','planned_minutes','operating_minutes','ideal_cycle_minutes','total_output','good_output'],
         ][$key];
         $selectOptions = [
@@ -32,11 +30,9 @@
             'production_order_id' => $references['productionOrders']->mapWithKeys(fn ($item) => [$item->id => $item->order_number])->all(),
             'production_batch_id' => $references['productionBatches']->mapWithKeys(fn ($item) => [$item->id => $item->batch_number])->all(),
             'routing_operation_id' => $references['routingOperations']->mapWithKeys(fn ($item) => [$item->id => $item->name.' · urutan '.$item->sequence])->all(),
-            'bom_id' => $references['boms']->filter(fn ($bom) => $key === 'bom-items' ? ($bom->status === 'draft' || $bom->id === $record->bom_id) : ($bom->status === 'active' || $bom->id === $record->bom_id))->mapWithKeys(fn ($bom) => [$bom->id => $bom->product->sku.' · '.$bom->bom_number.' · '.$bom->status])->all(),
             'product_routing_id' => $references['productRoutings']->filter(fn ($routing) => $routing->status === 'active' || $routing->id === $record->product_routing_id)->mapWithKeys(fn ($routing) => [$routing->id => $routing->product->sku.' · '.$routing->name.' v'.$routing->version])->all(),
-            'inventory_item_id' => $references['inventoryItems']->mapWithKeys(fn ($item) => [$item->id => $item->sku.' · '.$item->name])->all(),
         ];
-        $numberFields = ['rated_kw','target_oee','estimated_kwh','estimated_energy_kwh','estimated_production_minutes','setup_time_minutes','ideal_cycle_seconds','labor_required','capacity','batch_size','material_cost','labor_cost','overhead_cost','planned_quantity','actual_quantity','good_quantity','quantity','threshold','unit_cost','kwh','tariff_per_kwh','quantity_per_unit','scrap_allowance_percent','planned_minutes','operating_minutes','ideal_cycle_minutes','total_output','good_output'];
+        $numberFields = ['rated_kw','target_oee','estimated_kwh','estimated_energy_kwh','estimated_production_minutes','setup_time_minutes','ideal_cycle_seconds','labor_required','capacity','batch_size','material_cost','labor_cost','overhead_cost','planned_quantity','actual_quantity','good_quantity','quantity','threshold','unit_cost','kwh','tariff_per_kwh','planned_minutes','operating_minutes','ideal_cycle_minutes','total_output','good_output'];
         $wideFields = ['description','simulation_status','notes','work_instructions','quality_criteria'];
         $commonHints = [
             'code' => 'Gunakan kode unik dan konsisten agar mudah dicari serta dirujuk di proses lain.',
@@ -44,13 +40,11 @@
             'name' => 'Nama yang mudah dikenali oleh operator dan tim perencanaan.',
             'machine_id' => 'Pilihan berasal dari master mesin. Tautan ini membantu menelusuri proses atau pekerjaan pemeliharaan.',
             'process_id' => 'Pilihan berasal dari master proses yang sudah terdaftar.',
-            'product_id' => 'Pilih produk yang menjadi dasar struktur atau order ini.',
+            'product_id' => 'Pilih produk yang menjadi dasar order ini.',
             'production_order_id' => 'Tautkan hanya jika catatan ini memang berasal dari order tersebut.',
             'production_batch_id' => 'Opsional. Tautan batch membuat energi/OEE dan biaya dapat ditelusuri pada batch terkait.',
             'routing_operation_id' => 'Opsional. Pilih operasi dari routing produk yang sesuai; tautan ini tidak mengalokasikan data secara otomatis.',
-            'bom_id' => 'Pilih versi BOM milik produk yang sama. Hanya draft yang dapat diubah; order menyimpan snapshot struktur saat dibuat.',
             'product_routing_id' => 'Pilih routing aktif milik produk. Snapshot order akan mempertahankan versi yang dipilih.',
-            'inventory_item_id' => 'Tautkan ke master inventory yang benar agar kebutuhan batch dapat direservasi dan dikonsumsi.',
             'capacity' => 'Kapasitas nominal menurut satuan yang dipilih; nilai ini tidak otomatis mengatur penjadwalan.',
             'capacity_unit' => 'Satuan yang digunakan untuk menjelaskan kapasitas, misalnya unit/jam.',
             'rated_kw' => 'Daya nominal mesin dalam kW, bukan konsumsi energi aktual. Pembacaan energi dicatat dalam kWh.',
@@ -63,12 +57,12 @@
             'estimated_energy_kwh' => 'Estimasi energi untuk produk dalam kWh. Tidak menggantikan catatan energi aktual.',
             'estimated_production_minutes' => 'Estimasi total durasi produksi dalam menit; bukan jadwal atau waktu aktual.',
             'batch_size' => 'Ukuran batch standar dalam unit produk. Order/batch aktual tetap direncanakan melalui workflow batch.',
-            'planned_quantity' => 'Jumlah unit yang direncanakan. Kuantitas ini membatasi pembagian batch dan perhitungan kebutuhan material.',
+            'planned_quantity' => 'Jumlah unit yang direncanakan. Kuantitas ini membatasi pembagian batch pada order.',
             'actual_quantity' => 'Jumlah output aktual yang benar-benar dihasilkan. Masukkan hasil pengukuran/pencatatan produksi.',
             'good_quantity' => 'Jumlah output yang lolos kriteria kualitas; tidak boleh melebihi output aktual.',
             'quantity' => 'Jumlah stok fisik dalam satuan item. Perubahan saldo dicatat sebagai transaksi inventory.',
             'threshold' => 'Batas minimum stok dalam satuan item; stok pada atau di bawah nilai ini perlu ditinjau.',
-            'unit' => 'Satuan untuk kuantitas item. Perubahan satuan dibatasi jika item sudah dipakai BOM atau memiliki transaksi.',
+            'unit' => 'Satuan untuk kuantitas item. Perubahan satuan dibatasi jika item sudah memiliki transaksi.',
             'unit_cost' => 'Biaya referensi per satu unit dalam rupiah. Nilai baru tidak mengubah snapshot biaya transaksi lama.',
             'tariff_per_kwh' => 'Tarif dalam rupiah untuk setiap kWh. Sistem menghitung biaya catatan sebagai kWh × tarif.',
             'kwh' => 'Konsumsi energi dalam kilowatt-hour (kWh), bukan daya nominal dalam kW.',
@@ -77,9 +71,6 @@
             'source' => 'Pilih asal data yang benar. Simulation adalah data simulasi, bukan pembacaan sensor aktual; label IoT bukan status online perangkat.',
             'external_event_id' => 'ID unik dari sumber eksternal untuk mengenali pengiriman ulang event. Jangan mengganti identitas event yang sama.',
             'device_id' => 'ID perangkat sumber jika tersedia. ID ini sendiri tidak membuktikan perangkat sedang online.',
-            'quantity_per_unit' => 'Jumlah komponen untuk menghasilkan output BOM sesuai basis output versi BOM; pastikan satuannya sesuai item.',
-            'scrap_allowance_percent' => 'Persentase cadangan scrap (0–100%) yang ditambahkan pada kebutuhan komponen; isi 0 jika tidak ada allowance.',
-            'output_quantity' => 'Jumlah produk yang dihasilkan oleh satu basis resep BOM.',
             'planned_minutes' => 'Durasi produksi yang direncanakan dalam menit untuk periode catatan OEE.',
             'operating_minutes' => 'Waktu mesin benar-benar beroperasi dalam menit; tidak boleh melebihi waktu terencana.',
             'total_output' => 'Jumlah seluruh output (baik dan reject) selama periode catatan.',
@@ -103,7 +94,6 @@
             'inventory' => ['location' => 'Lokasi penyimpanan item jika sudah ditentukan.', 'category' => 'Pengelompokan item untuk membantu pencarian.'],
             'maintenance-logs' => ['issue' => 'Ringkasan masalah atau pekerjaan pemeliharaan yang perlu ditangani.', 'priority' => 'Tingkat urgensi pekerjaan, bukan status ketersediaan mesin.', 'scheduled_at' => 'Tanggal pekerjaan direncanakan. Kosongkan jika belum dijadwalkan.'],
             'energy-records' => ['process_id' => 'Opsional. Proses yang terkait dengan pembacaan; tidak mengubah pembacaan energi.', 'payload' => 'Muatan mentah perangkat untuk audit. Sistem menyimpannya sebagai JSON; hindari memasukkan data rahasia.', 'external_event_id' => 'Gunakan ID event sumber yang stabil agar event yang dikirim ulang dapat dikenali.'],
-            'bom-items' => ['supplier' => 'Pemasok komponen jika sudah diketahui; field ini opsional.', 'component_sku' => 'Kode komponen pada master/katalog. Jika inventory ditautkan, kode akan mengikuti item inventory.', 'component_name' => 'Nama komponen yang dikenali tim produksi. Jika inventory ditautkan, nama mengikuti item tersebut.'],
             'oee-records' => ['machine_id' => 'Mesin yang diukur. Hasil OEE dihitung dari waktu dan output pada catatan ini.', 'notes' => 'Opsional. Catat konteks downtime atau pengecualian periode bila relevan.'],
         ];
     @endphp
@@ -126,7 +116,7 @@
         </div>
         @if ($lockedOrder)
             <x-ui.information title="Sebagian field order dikendalikan workflow batch" type="warning" class="mb-5">
-                <p>Produk, snapshot BOM/routing, status, dan output tidak dapat diubah dari form ini setelah batch dibuat. Kelola progres dan output melalui halaman batch.</p>
+                <p>Produk, routing snapshot, status, dan output tidak dapat diubah dari form ini setelah batch dibuat. Kelola progres dan output melalui halaman batch.</p>
             </x-ui.information>
         @endif
 

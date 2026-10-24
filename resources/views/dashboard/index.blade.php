@@ -165,7 +165,7 @@
         <article class="app-card p-5 sm:p-6">
             <div class="mb-5">
                 <h2 class="text-base font-bold text-navy-900">Komponen estimasi costing</h2>
-                <p class="mt-1 text-xs text-slate-500">Agregat nilai master BOM/produk dan energi yang ditautkan ke order; bukan realisasi biaya per periode.</p>
+                <p class="mt-1 text-xs text-slate-500">Agregat nilai master produk dan energi yang ditautkan ke order; bukan realisasi biaya per periode.</p>
             </div>
             @foreach ($costComponents as $component)
                 <div class="mb-4 last:mb-0">

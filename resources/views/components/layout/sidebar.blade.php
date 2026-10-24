@@ -16,7 +16,6 @@
                 ['title' => 'Production', 'items' => [
                     ['route' => 'production-orders.index', 'label' => 'Production Orders', 'icon' => 'clipboard'],
                     ['route' => 'products.index', 'label' => 'Products', 'icon' => 'cube'],
-                    ['route' => 'bom-items.index', 'label' => 'Bill of Materials', 'icon' => 'layers'],
                     ['route' => 'processes.index', 'label' => 'Processes', 'icon' => 'flow'],
                 ]],
                 ['title' => 'Asset management', 'items' => [

@@ -2,9 +2,8 @@
 
 @section('content')
     @php
-        $tabs = [
+        $tabLabels = [
             'overview' => 'Overview',
-            'bom' => 'Bill of Materials',
             'routing' => 'Routing',
             'history' => 'Production history',
             'cost' => 'Cost breakdown',
@@ -27,34 +26,19 @@
     </div>
 
     <nav class="mb-5 flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="Tab detail produk">
-        @foreach ($tabs as $tabKey => $label)
+        @foreach ($tabLabels as $tabKey => $label)
             <a href="{{ route('products.show', [$product, 'tab' => $tabKey]) }}" @if($tab === $tabKey) aria-current="page" @endif class="shrink-0 border-b-2 px-3 py-3 text-xs font-semibold sm:px-4 sm:text-sm {{ $tab === $tabKey ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:text-navy-900' }}">{{ $label }}</a>
         @endforeach
     </nav>
 
-    @if (!$activeBom)
-        <x-ui.next-action class="mb-5" tone="warning">
-            <p>Produk belum memiliki BOM aktif. Buat draft BOM, tambahkan komponen, lalu aktifkan setelah susunannya diperiksa.</p>
-            <a class="mt-2 inline-flex font-semibold underline" href="{{ route('products.show', [$product, 'tab' => 'bom']) }}">Buka pengelolaan BOM</a>
-        </x-ui.next-action>
-    @elseif ($activeBom->items->isEmpty())
-        <x-ui.next-action class="mb-5" tone="warning">
-            <p>BOM aktif belum memiliki komponen. Lengkapi draft BOM dengan komponen dan jumlah per output, lalu aktifkan versi tersebut sebelum memulai produksi.</p>
-            <a class="mt-2 inline-flex font-semibold underline" href="{{ route('products.show', [$product, 'tab' => 'bom']) }}">Lengkapi BOM</a>
-        </x-ui.next-action>
-    @elseif (!$activeRouting || $activeRouting->operations->isEmpty())
+    @if (!$activeRouting || $activeRouting->operations->isEmpty())
         <x-ui.next-action class="mb-5" tone="warning">
             <p>{{ $activeRouting ? 'Routing aktif belum memiliki operasi.' : 'Produk belum memiliki routing aktif.' }} Susun operasi routing berurutan sebelum membuat batch produksi.</p>
             <a class="mt-2 inline-flex font-semibold underline" href="{{ route('products.show', [$product, 'tab' => 'routing']) }}">Buka pengelolaan routing</a>
         </x-ui.next-action>
-    @elseif ($activeBom->items->contains(fn ($item) => !$item->inventory_item_id))
-        <x-ui.next-action class="mb-5" tone="warning">
-            <p>Beberapa komponen BOM belum ditautkan ke item inventory. Buat draft BOM dan petakan item yang benar agar kebutuhan batch dapat direservasi.</p>
-            <a class="mt-2 inline-flex font-semibold underline" href="{{ route('products.show', [$product, 'tab' => 'bom']) }}">Tinjau komponen BOM</a>
-        </x-ui.next-action>
     @else
         <x-ui.next-action class="mb-5" tone="success">
-            <p>BOM aktif v{{ $activeBom->version }} dan routing aktif v{{ $activeRouting->version }} tersedia dengan {{ $activeRouting->operations->count() }} operasi. Order baru dapat mengambil snapshot dari struktur ini.</p>
+            <p>Routing aktif v{{ $activeRouting->version }} tersedia dengan {{ $activeRouting->operations->count() }} operasi. Order baru dapat mengambil snapshot routing ini.</p>
             <a class="mt-2 inline-flex font-semibold underline" href="{{ route('production-orders.create', ['product_id' => $product->id]) }}">Buat order produksi</a>
         </x-ui.next-action>
     @endif
@@ -75,15 +59,6 @@
             </article>
             <div class="space-y-5">
                 <article class="app-card p-5">
-                    <div class="flex items-center justify-between gap-3"><h2 class="text-sm font-bold text-navy-900">BOM aktif</h2><a href="{{ route('products.show',[$product,'tab'=>'bom']) }}" class="text-xs font-semibold text-brand-700">Kelola</a></div>
-                    @if ($activeBom)
-                        <p class="mt-3 text-sm font-semibold">{{ $activeBom->bom_number }} · v{{ $activeBom->version }}</p>
-                        <p class="mt-1 text-xs text-slate-500">{{ $activeBom->items->count() }} komponen · output {{ $activeBom->output_quantity }}</p>
-                    @else
-                        <p class="mt-3 text-sm text-slate-500">Belum ada BOM aktif.</p>
-                    @endif
-                </article>
-                <article class="app-card p-5">
                     <div class="flex items-center justify-between gap-3"><h2 class="text-sm font-bold text-navy-900">Routing aktif</h2><a href="{{ route('products.show',[$product,'tab'=>'routing']) }}" class="text-xs font-semibold text-brand-700">Kelola</a></div>
                     @if ($activeRouting)
                         <a href="{{ route('products.routings.show',[$product,$activeRouting]) }}" class="mt-3 block text-sm font-semibold text-brand-700">{{ $activeRouting->name }} · v{{ $activeRouting->version }}</a>
@@ -99,51 +74,6 @@
             <x-ui.kpi-card label="Energi tertaut order" :value="number_format((float)$energySummary->kwh,2,',','.').' kWh'" detail="Hanya catatan dengan production_order_id terkait" icon="E" tone="blue" />
             <x-ui.kpi-card label="Biaya energi tertaut" :value="'Rp '.number_format((float)$energySummary->cost,0,',','.')" detail="Nilai dari catatan energi tersimpan" icon="Rp" tone="navy" />
         </div>
-    @elseif ($tab === 'bom')
-        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div><h2 class="text-base font-bold text-navy-900">Bill of Materials</h2><p class="mt-1 text-xs text-slate-500">Versi aktif tidak dapat diedit. Buat draft untuk mengubah komponen; SKU inventory hanya ditautkan setelah pemetaan dipastikan.</p></div>
-            <form method="POST" action="{{ route('products.boms.store', $product) }}">
-                @csrf
-                <x-ui.button type="submit">Buat draft BOM</x-ui.button>
-            </form>
-        </div>
-        @if ($errors->has('bom'))
-            <x-ui.alert type="error" class="mb-4">{{ $errors->first('bom') }}</x-ui.alert>
-        @endif
-        <div class="space-y-5">
-            @forelse ($product->boms->sortByDesc('version') as $bom)
-                <article class="app-card overflow-hidden">
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4 sm:px-5">
-                        <div><div class="flex items-center gap-2"><h3 class="text-sm font-bold text-navy-900">{{ $bom->bom_number }} · v{{ $bom->version }}</h3>                        <x-ui.status-badge :status="$bom->status" context="structure" /></div><p class="mt-1 text-xs text-slate-500">Output {{ $bom->output_quantity }} {{ $product->base_unit }} · {{ $bom->items->count() }} komponen</p></div>
-                        @if ($bom->status === 'draft')
-                            <div class="flex flex-wrap gap-2">
-                                <x-ui.button :href="route('bom-items.create', ['product_id' => $product->id, 'bom_id' => $bom->id])" variant="secondary">Tambah komponen</x-ui.button>
-                                <form method="POST" action="{{ route('products.boms.activate', [$product, $bom]) }}" onsubmit="return confirm('Aktifkan BOM ini? Versi aktif sebelumnya akan diarsipkan.')">
-                                    @csrf
-                                    @method('PATCH')
-                                    <x-ui.button type="submit">Aktifkan BOM</x-ui.button>
-                                </form>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[680px] text-left text-sm">
-                            <thead class="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500"><tr><th class="px-4 py-3">Komponen</th><th class="px-4 py-3">Inventory</th><th class="px-4 py-3 text-right">Qty / output</th><th class="px-4 py-3 text-right">Scrap</th><th class="px-4 py-3 text-right">Biaya referensi</th><th class="px-4 py-3">Kebutuhan unit</th>@if($bom->status === 'draft')<th class="px-4 py-3">Aksi</th>@endif</tr></thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @forelse ($bom->items as $item)
-                                    <tr><td class="px-4 py-3"><span class="font-semibold">{{ $item->component_name }}</span><span class="block text-xs text-slate-500">{{ $item->component_sku }}</span></td><td class="px-4 py-3">{{ $item->inventoryItem?->name ?? 'Belum ditautkan' }}</td><td class="px-4 py-3 text-right">{{ number_format((float)$item->quantity_per_unit,3,',','.') }} {{ $item->unit }}</td><td class="px-4 py-3 text-right">{{ number_format((float)$item->scrap_allowance_percent,2,',','.') }}%</td><td class="px-4 py-3 text-right">Rp {{ number_format((float)$item->unit_cost,0,',','.') }}</td><td class="px-4 py-3">{{ $item->inventoryItem ? number_format((float)$item->quantity_per_unit*(1+(float)$item->scrap_allowance_percent/100),3,',','.').' '.$item->unit : 'Pemetaan belum tersedia' }}</td>@if($bom->status === 'draft')<td class="px-4 py-3"><div class="flex items-center gap-3"><a class="text-xs font-semibold text-brand-700" href="{{ route('bom-items.edit', $item) }}">Edit</a><form method="POST" action="{{ route('bom-items.destroy', $item) }}" onsubmit="return confirm('Hapus komponen draft ini?')">@csrf @method('DELETE')<button class="text-xs font-semibold text-rose-700">Hapus</button></form></div></td>@endif</tr>
-                                @empty
-                                    <tr><td colspan="{{ $bom->status === 'draft' ? 7 : 6 }}" class="p-0"><x-ui.empty-state title="BOM ini belum memiliki komponen" description="Tambahkan komponen BOM untuk melihat material requirements." /></td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-            @empty
-                <x-ui.empty-state title="Belum ada versi BOM" description="Buat draft BOM untuk menentukan kebutuhan material produk." />
-            @endforelse
-        </div>
-        <p class="mt-4 text-xs text-slate-500">Stok bebas, reservasi, dan kekurangan belum dihitung karena belum ada kebijakan alokasi serta saldo reservasi dalam model inventory.</p>
     @elseif ($tab === 'routing')
         <div class="grid gap-5 xl:grid-cols-3">
             <article class="app-card p-5 sm:p-6 xl:col-span-2">
@@ -184,9 +114,9 @@
         </x-ui.table>
         <div class="mt-4">{{ $orders->links() }}</div>
     @elseif ($tab === 'cost')
-        <div class="mb-5"><h2 class="text-base font-bold text-navy-900">Cost breakdown</h2><p class="mt-1 text-xs text-slate-500">Estimasi master saat ini; bukan biaya aktual batch. Riwayat historis belum dibekukan per versi routing/BOM.</p></div>
+        <div class="mb-5"><h2 class="text-base font-bold text-navy-900">Cost breakdown</h2><p class="mt-1 text-xs text-slate-500">Estimasi master produk; bukan biaya aktual batch. Biaya material diisi sebagai estimasi produk, bukan dihitung dari daftar komponen.</p></div>
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <x-ui.kpi-card label="Material BOM aktif" :value="'Rp '.number_format((float)$bomMaterialEstimate,0,',','.')" detail="Qty BOM × biaya referensi termasuk scrap" icon="M" tone="blue" />
+            <x-ui.kpi-card label="Material estimasi" :value="'Rp '.number_format((float)$product->material_cost,0,',','.')" detail="Nilai estimasi master produk" icon="M" tone="blue" />
             <x-ui.kpi-card label="Tenaga kerja master" :value="'Rp '.number_format((float)$product->labor_cost,0,',','.')" detail="Nilai master produk" icon="L" />
             <x-ui.kpi-card label="Energi order tertaut" :value="'Rp '.number_format((float)$energySummary->cost,0,',','.')" detail="Akumulasi historis catatan terkait order" icon="E" tone="green" />
             <x-ui.kpi-card label="Overhead master" :value="'Rp '.number_format((float)$product->overhead_cost,0,',','.')" detail="Nilai master produk" icon="O" tone="amber" />

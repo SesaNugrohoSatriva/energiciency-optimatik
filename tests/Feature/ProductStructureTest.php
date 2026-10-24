@@ -2,60 +2,26 @@
 
 namespace Tests\Feature;
 
-use App\Models\Bom;
-use App\Models\Machine;
 use App\Models\InventoryItem;
-use App\Models\Product;
+use App\Models\Machine;
 use App\Models\Process;
+use App\Models\Product;
 use App\Models\ProductionOrder;
 use App\Models\User;
-use App\Services\ProductionOrderStructureService;
-use Illuminate\Support\Facades\Hash;
-use App\Services\ProductionBatchService;
-use App\Services\InventoryReservationService;
 use App\Services\InventoryTransactionService;
-use App\Services\BomVersionService;
+use App\Services\ProductionBatchService;
+use App\Services\ProductionOrderStructureService;
 use App\Services\ProductRoutingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class ProductStructureTest extends TestCase
 {
     use RefreshDatabase;
-
-    public function test_bom_draft_copies_active_components_and_activation_archives_previous_version(): void
-    {
-        $product = Product::create(['sku' => 'TEST-001', 'name' => 'Test product']);
-        $activeBom = $product->boms()->create([
-            'bom_number' => 'TEST-001-BOM-001',
-            'version' => 1,
-            'status' => 'active',
-            'output_quantity' => 1,
-        ]);
-        $activeBom->items()->create([
-            'product_id' => $product->id,
-            'component_sku' => 'COMP-001',
-            'component_name' => 'Test component',
-            'quantity_per_unit' => 2,
-            'unit' => 'pcs',
-            'unit_cost' => 12.5,
-            'scrap_allowance_percent' => 3,
-        ]);
-
-        $service = app(BomVersionService::class);
-        $draft = $service->createDraft($product->fresh());
-
-        $this->assertSame('draft', $draft->status);
-        $this->assertSame(1, $draft->items()->count());
-        $this->assertNotSame($activeBom->items()->first()->id, $draft->items()->first()->id);
-        $this->assertSame('COMP-001', $draft->items()->first()->component_sku);
-
-        $service->activate($draft);
-
-        $this->assertSame('archived', $activeBom->fresh()->status);
-        $this->assertSame('active', $draft->fresh()->status);
-    }
 
     public function test_routing_draft_copies_operations_reorders_and_activates_without_mutating_previous_version(): void
     {
@@ -102,51 +68,8 @@ class ProductStructureTest extends TestCase
         $this->assertSame('Initial operation', $activeOperation->fresh()->name);
     }
 
-    public function test_active_bom_cannot_be_reactivated_through_version_service(): void
+    public function test_batches_enforce_order_quantity_and_roll_up_completed_output(): void
     {
-        $product = Product::create(['sku' => 'TEST-003', 'name' => 'Test product']);
-        $activeBom = $product->boms()->create([
-            'bom_number' => 'TEST-003-BOM-001',
-            'version' => 1,
-            'status' => 'active',
-            'output_quantity' => 1,
-        ]);
-        $activeBom->items()->create([
-            'product_id' => $product->id,
-            'component_sku' => 'COMP-003',
-            'component_name' => 'Test component',
-            'quantity_per_unit' => 1,
-            'unit' => 'pcs',
-            'unit_cost' => 10,
-        ]);
-
-        $this->expectException(ValidationException::class);
-        app(BomVersionService::class)->activate($activeBom);
-    }
-
-    public function test_batches_enforce_order_quantity_capture_snapshots_and_roll_up_completed_output(): void
-    {
-        $inventory = InventoryItem::create([
-            'sku' => 'INV-TEST-004',
-            'name' => 'Test component',
-            'quantity' => 20,
-            'threshold' => 2,
-            'unit' => 'pcs',
-            'unit_cost' => 5,
-        ]);
-        $bomSnapshot = [
-            'bom_number' => 'TEST-004-BOM-001',
-            'version' => 1,
-            'output_quantity' => 1,
-            'items' => [[
-                'component_sku' => $inventory->sku,
-                'component_name' => $inventory->name,
-                'inventory_item_id' => $inventory->id,
-                'quantity_per_unit' => 1,
-                'unit' => 'pcs',
-                'unit_cost' => 5,
-            ]],
-        ];
         $order = ProductionOrder::create([
             'order_number' => 'PO-TEST-004',
             'product_id' => Product::create(['sku' => 'TEST-004', 'name' => 'Test product'])->id,
@@ -156,14 +79,13 @@ class ProductStructureTest extends TestCase
             'good_quantity' => 1,
             'baseline_actual_quantity' => 1,
             'baseline_good_quantity' => 1,
-            'bom_snapshot' => $bomSnapshot,
             'routing_snapshot' => ['name' => 'Test route', 'version' => 1, 'operations' => [['sequence' => 1, 'name' => 'Assembly']]],
         ]);
         $service = app(ProductionBatchService::class);
         $first = $service->create($order, 5, null, null);
 
-        $this->assertSame($bomSnapshot, $first->bom_snapshot);
         $this->assertSame('planned', $first->status);
+        $this->assertSame($order->routing_snapshot, $first->routing_snapshot);
 
         try {
             $service->create($order, 4, null, null);
@@ -172,9 +94,6 @@ class ProductStructureTest extends TestCase
             $this->assertArrayHasKey('planned_quantity', $exception->errors());
         }
 
-        $inventoryService = app(InventoryReservationService::class);
-        $inventoryService->reserve($first, null);
-        $this->assertEquals(20.0, (float) $inventory->fresh()->quantity);
         $service->start($first, null);
         try {
             $service->complete($first, 6, 5, null, null);
@@ -182,21 +101,16 @@ class ProductStructureTest extends TestCase
         } catch (ValidationException $exception) {
             $this->assertArrayHasKey('actual_quantity', $exception->errors());
         }
-        $inventoryService->consume($first, [$first->materials()->firstOrFail()->id => 5], null);
         $service->complete($first, 5, 4, null, null);
 
         $second = $service->create($order->fresh(), 3, null, null);
-        $inventoryService->reserve($second, null);
         $service->start($second, null);
-        $inventoryService->consume($second, [$second->materials()->firstOrFail()->id => 3], null);
         $service->complete($second, 3, 3, null, null);
 
         $this->assertSame(9, (int) $order->fresh()->actual_quantity);
         $this->assertSame(8, (int) $order->fresh()->good_quantity);
         $this->assertSame('Completed', $order->fresh()->status);
         $this->assertSame(3, $first->events()->count());
-        $this->assertEquals(12.0, (float) $inventory->fresh()->quantity);
-        $this->assertSame(4, $inventory->transactions()->count());
     }
 
     public function test_batch_cannot_start_without_routing_operations(): void
@@ -211,7 +125,6 @@ class ProductStructureTest extends TestCase
             'good_quantity' => 0,
             'baseline_actual_quantity' => 0,
             'baseline_good_quantity' => 0,
-            'bom_snapshot' => ['output_quantity' => 1, 'items' => []],
             'routing_snapshot' => ['name' => 'Empty route', 'version' => 1, 'operations' => []],
         ]);
         $service = app(ProductionBatchService::class);
@@ -227,6 +140,20 @@ class ProductStructureTest extends TestCase
         $this->assertSame('planned', $batch->fresh()->status);
     }
 
+    public function test_bom_schema_and_admin_endpoints_are_removed(): void
+    {
+        $this->assertFalse(Schema::hasTable('boms'));
+        $this->assertFalse(Schema::hasTable('bom_items'));
+        $this->assertFalse(Schema::hasTable('batch_materials'));
+        $this->assertFalse(Schema::hasColumn('production_orders', 'bom_id'));
+        $this->assertFalse(Schema::hasColumn('production_orders', 'bom_snapshot'));
+        $this->assertFalse(Schema::hasColumn('production_batches', 'bom_snapshot'));
+        $this->assertFalse(Schema::hasColumn('inventory_transactions', 'production_batch_id'));
+        $this->assertFalse(Schema::hasColumn('inventory_transactions', 'batch_material_id'));
+        $this->assertFalse(Route::has('bom-items.index'));
+        $this->assertFalse(Route::has('products.boms.store'));
+    }
+
     public function test_authenticated_batch_workflow_pages_and_cost_entry_route_work_end_to_end(): void
     {
         $user = User::create([
@@ -234,31 +161,16 @@ class ProductStructureTest extends TestCase
             'email' => 'batch-workflow@example.test',
             'password' => Hash::make('password'),
         ]);
-        $product = Product::create(['sku' => 'TEST-005', 'name' => 'Batch workflow product']);
         $inventory = InventoryItem::create([
             'sku' => 'INV-TEST-005',
-            'name' => 'Mapped material',
+            'name' => 'Test stock item',
             'quantity' => 10,
             'threshold' => 1,
             'unit' => 'pcs',
             'unit_cost' => 25,
         ]);
-        $bom = $product->boms()->create([
-            'bom_number' => 'TEST-005-BOM-001',
-            'version' => 1,
-            'status' => 'active',
-            'output_quantity' => 1,
-        ]);
-        $bom->items()->create([
-            'product_id' => $product->id,
-            'inventory_item_id' => $inventory->id,
-            'component_sku' => $inventory->sku,
-            'component_name' => $inventory->name,
-            'quantity_per_unit' => 1,
-            'unit' => 'pcs',
-            'unit_cost' => 25,
-        ]);
         $process = Process::create(['code' => 'TEST-P-5', 'name' => 'Batch process']);
+        $product = Product::create(['sku' => 'TEST-005', 'name' => 'Batch workflow product']);
         $routing = $product->routings()->create(['version' => 1, 'name' => 'Batch route', 'status' => 'active']);
         $routing->operations()->create([
             'sequence' => 1,
@@ -281,29 +193,31 @@ class ProductStructureTest extends TestCase
         $this->actingAs($user)
             ->get(route('production-orders.show', $order))
             ->assertOk()
-            ->assertSee('Snapshot struktur order')
-            ->assertSee('Struktur order sudah tersedia')
-            ->assertSee('Order direncanakan');
+            ->assertSee('Snapshot routing order')
+            ->assertSee('Struktur routing order sudah tersedia')
+            ->assertDontSee('BOM');
 
         $this->get(route('products.show', $product))
             ->assertOk()
-            ->assertSee('BOM aktif v1')
-            ->assertSee('Buat order produksi');
+            ->assertSee('Buat order produksi')
+            ->assertDontSee('Bill of Materials');
+        $this->get(route('products.show', [$product, 'tab' => 'routing']))
+            ->assertOk()
+            ->assertSee('Versi routing');
+        $this->get(route('products.show', [$product, 'tab' => 'cost']))
+            ->assertOk()
+            ->assertSee('Material estimasi');
 
         $this->post(route('production-orders.batches.store', $order), ['planned_quantity' => 2])
             ->assertRedirect();
         $batch = $order->batches()->firstOrFail();
         $this->get(route('production-orders.batches.show', [$order, $batch]))
             ->assertOk()
-            ->assertSee('Kebutuhan dan transaksi material')
-            ->assertSee('Reservasikan seluruh kebutuhan material');
+            ->assertSee('Snapshot routing')
+            ->assertDontSee('Snapshot BOM')
+            ->assertDontSee('Kebutuhan dan transaksi material');
 
-        $this->patch(route('production-orders.batches.materials.reserve', [$order, $batch]))->assertRedirect();
         $this->patch(route('production-orders.batches.start', [$order, $batch]))->assertRedirect();
-        $this->patch(route('production-orders.batches.materials.consume', [$order, $batch]), [
-            'material_id' => $batch->materials()->firstOrFail()->id,
-            'quantity' => 2,
-        ])->assertRedirect();
         $this->patch(route('production-orders.batches.complete', [$order, $batch]), [
             'actual_quantity' => 2,
             'good_quantity' => 2,
@@ -320,7 +234,8 @@ class ProductStructureTest extends TestCase
             ->assertSee('Batch selesai.');
         $this->get(route('inventory.show', $inventory))
             ->assertOk()
-            ->assertSee('Ledger inventory');
+            ->assertSee('Ledger inventory')
+            ->assertDontSee('Reservasi aktif');
         $this->get(route('energy-records.create'))
             ->assertOk()
             ->assertSee('Batch produksi terkait')
@@ -331,7 +246,7 @@ class ProductStructureTest extends TestCase
             ->assertSee('Waktu siklus ideal per unit dalam menit');
         $this->get(route('costing'))->assertOk()->assertSee('Biaya aktual dari batch');
         $this->get(route('dashboard'))->assertOk();
-        $this->assertEquals(8.0, (float) $inventory->fresh()->quantity);
+        $this->assertEquals(10.0, (float) $inventory->fresh()->quantity);
         $this->assertSame('Completed', $order->fresh()->status);
     }
 
@@ -339,7 +254,7 @@ class ProductStructureTest extends TestCase
     {
         $inventory = InventoryItem::create([
             'sku' => 'INV-TEST-006',
-            'name' => 'Opening balance material',
+            'name' => 'Opening balance item',
             'quantity' => 5,
             'threshold' => 1,
             'unit' => 'pcs',

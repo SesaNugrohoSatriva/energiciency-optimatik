@@ -10,8 +10,8 @@
             'delayed' => 'Jadwal order terlambat dibanding rencana yang tercatat.',
         ],
         'production-batch' => [
-            'planned' => 'Batch belum dimulai. Snapshot BOM, routing, pemetaan inventory, dan reservasi material harus siap lebih dahulu.',
-            'in_progress' => 'Batch sedang diproses. Catat konsumsi material dan output aktual sebelum menyelesaikannya.',
+            'planned' => 'Batch belum dimulai. Routing aktif dengan operasi harus siap lebih dahulu.',
+            'in_progress' => 'Batch sedang diproses. Catat output aktual sebelum menyelesaikannya.',
             'completed' => 'Batch selesai dan outputnya telah diperhitungkan pada progres order.',
             'cancelled' => 'Batch dibatalkan sebelum produksi dimulai; kuantitasnya tidak dihitung sebagai rencana batch aktif.',
         ],

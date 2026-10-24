@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\{Machine,Process,Product,Bom,BomItem,ProductionOrder,InventoryItem,MaintenanceLog,EnergyRecord,OeeRecord,User};
+use App\Models\{Machine,Process,Product,ProductionOrder,InventoryItem,MaintenanceLog,EnergyRecord,OeeRecord,User};
 use App\Services\ProductionOrderStructureService;
 use App\Services\InventoryTransactionService;
 use Carbon\Carbon;
@@ -20,11 +20,9 @@ class DatabaseSeeder extends Seeder
         foreach ($processes as $p) {
             Process::updateOrCreate(['code' => $p[0]], ['name' => $p[1], 'machine_id' => Machine::where('code', $p[2])->value('id'), 'estimated_kwh' => $p[3]]);
         }
-        $products = [['SIM-VENT-001', 'ICU Ventilator', 'Medical Device', 8, 82, ['Structural frame assembly', 'Flow control module', 'Control electronics']], ['SIM-MPPS-001', 'Mini-Plan Production System', 'Automation System', 10, 84, ['Linear motion frame', 'Drive and control cabinet', 'Sensor and interface kit']], ['SIM-DCS-001', 'Digital Control System', 'Control System', 12, 86, ['Embedded controller board', 'Signal conditioning harness', 'Human-machine interface panel']], ['SIM-FLOAMS-001', 'FloAms', 'Process Automation', 7, 83, ['Modular sensing frame', 'Actuation subassembly', 'Monitoring electronics']], ['SIM-APE-001', 'Alat Peraga Pendidikan', 'Education Product', 15, 89, ['Learning module frame', 'Sensor and indicator kit', 'Educational control board']]];
+        $products = [['SIM-VENT-001', 'ICU Ventilator', 'Medical Device', 8, 82], ['SIM-MPPS-001', 'Mini-Plan Production System', 'Automation System', 10, 84], ['SIM-DCS-001', 'Digital Control System', 'Control System', 12, 86], ['SIM-FLOAMS-001', 'FloAms', 'Process Automation', 7, 83], ['SIM-APE-001', 'Alat Peraga Pendidikan', 'Education Product', 15, 89]];
         foreach ($products as $i => $p) {
-            $product = Product::updateOrCreate(['sku' => $p[0]], ['name' => $p[1], 'category' => $p[2], 'batch_size' => $p[3], 'target_oee' => $p[4], 'simulation_status' => 'Simulasi ilustratif, bukan spesifikasi resmi', 'material_cost' => 3500000 + ($i * 250000), 'labor_cost' => 650000, 'overhead_cost' => 300000]); $bom = Bom::firstOrCreate(['product_id' => $product->id, 'version' => 1], ['bom_number' => $product->sku . '-BOM-001', 'status' => 'active', 'output_quantity' => 1]); foreach ($p[5] as $j => $c) {
-                BomItem::firstOrCreate(['bom_id' => $bom->id, 'component_sku' => 'CMP-' . ($i + 1) . str_pad((string)($j + 1), 2, '0', STR_PAD_LEFT)], ['product_id' => $product->id, 'component_name' => $c, 'quantity_per_unit' => 1, 'unit' => 'pcs', 'unit_cost' => 250000 + ($j * 75000), 'supplier' => 'Pemasok Ilustratif']);
-            }
+            Product::updateOrCreate(['sku' => $p[0]], ['name' => $p[1], 'category' => $p[2], 'batch_size' => $p[3], 'target_oee' => $p[4], 'simulation_status' => 'Simulasi ilustratif, bukan spesifikasi resmi', 'material_cost' => 3500000 + ($i * 250000), 'labor_cost' => 650000, 'overhead_cost' => 300000]);
         }
         $orders = [['PO-3001', 'SIM-VENT-001', 'In Progress', 24, 18, 17, '2025-02-03'], ['PO-3002', 'SIM-MPPS-001', 'Completed', 18, 18, 18, '2025-02-10'], ['PO-3003', 'SIM-DCS-001', 'Planned', 15, 4, 3, '2025-02-15'], ['PO-3004', 'SIM-FLOAMS-001', 'Delayed', 20, 11, 10, '2025-02-20'], ['PO-3005', 'SIM-VENT-001', 'Completed', 24, 24, 24, '2025-02-24'], ['PO-3006', 'SIM-MPPS-001', 'In Progress', 18, 15, 14, '2025-02-27']];
         foreach ($orders as $o) {

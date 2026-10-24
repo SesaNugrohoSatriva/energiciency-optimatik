@@ -10,7 +10,6 @@
             'inventory' => ['sku', 'name', 'quantity', 'threshold', 'unit', 'unit_cost', 'location'],
             'maintenance-logs' => ['machine_id', 'issue', 'priority', 'status', 'scheduled_at'],
             'energy-records' => ['machine_id', 'production_order_id', 'production_batch_id', 'device_id', 'external_event_id', 'kwh', 'cost', 'recorded_at', 'source', 'payload'],
-            'bom-items' => ['bom_id', 'inventory_item_id', 'component_sku', 'component_name', 'quantity_per_unit', 'scrap_allowance_percent', 'unit_cost'],
             'oee-records' => ['machine_id', 'production_batch_id', 'routing_operation_id', 'recorded_on', 'planned_minutes', 'operating_minutes', 'ideal_cycle_minutes', 'total_output', 'good_output', 'oee'],
         };
         $sortable = [
@@ -21,7 +20,6 @@
             'inventory' => ['name', 'sku', 'quantity'],
             'maintenance-logs' => ['scheduled_at', 'priority', 'status'],
             'energy-records' => ['recorded_at', 'kwh', 'cost', 'source'],
-            'bom-items' => ['component_name', 'component_sku', 'unit_cost'],
             'oee-records' => ['recorded_on', 'oee'],
         ][$key];
         $statusContext = match ($key) {
@@ -100,10 +98,6 @@
                                 <x-ui.status-badge :status="$value ?? '—'" :context="$column === 'source' ? 'source' : ($column === 'priority' ? 'priority' : $statusContext)" />
                             @elseif ($column === 'is_active')
                                 <x-ui.status-badge :status="$value ? 'Active' : 'Inactive'" context="boolean" />
-                            @elseif ($column === 'bom_id')
-                                {{ $record->bom?->bom_number ?? '—' }}
-                            @elseif ($column === 'inventory_item_id')
-                                {{ $record->inventoryItem?->sku ?? 'Belum ditautkan' }}
                             @elseif ($column === 'production_batch_id')
                                 {{ ($key === 'oee-records' ? $record->batch?->batch_number : $record->productionBatch?->batch_number) ?? '—' }}
                             @elseif ($column === 'routing_operation_id')
@@ -113,7 +107,7 @@
                                 <code class="block max-w-56 truncate rounded bg-slate-50 px-2 py-1 text-xs text-slate-600" title="{{ $payloadText }}">{{ $payloadText ?: '—' }}</code>
                             @elseif (in_array($column, ['cost', 'unit_cost', 'material_cost', 'labor_cost', 'overhead_cost']))
                                 {{ $value === null ? '—' : 'Rp '.number_format((float) $value, 0, ',', '.') }}
-                            @elseif (in_array($column, ['kwh', 'estimated_kwh', 'quantity', 'threshold', 'quantity_per_unit']))
+                            @elseif (in_array($column, ['kwh', 'estimated_kwh', 'quantity', 'threshold']))
                                 {{ $value === null ? '—' : number_format((float) $value, 2, ',', '.') }}
                             @elseif ($value instanceof \Illuminate\Support\Carbon)
                                 {{ $value->format('d M Y H:i') }}

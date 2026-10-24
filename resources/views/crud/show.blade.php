@@ -10,7 +10,6 @@
             'inventory' => ['sku','name','category','quantity','threshold','unit','unit_cost','location','supplier'],
             'maintenance-logs' => ['machine_id','issue','priority','status','scheduled_at','notes'],
             'energy-records' => ['machine_id','process_id','production_order_id','production_batch_id','routing_operation_id','device_id','external_event_id','kwh','tariff_per_kwh','cost','recorded_at','source','payload'],
-            'bom-items' => ['product_id','bom_id','inventory_item_id','component_sku','component_name','quantity_per_unit','scrap_allowance_percent','unit','unit_cost','supplier'],
             'oee-records' => ['machine_id','production_batch_id','routing_operation_id','recorded_on','planned_minutes','operating_minutes','ideal_cycle_minutes','total_output','good_output','availability','performance','quality','oee','notes'],
         };
     @endphp

@@ -11,11 +11,6 @@ class InventoryItem extends Model
 
     protected $guarded = [];
 
-    public function bomItems(): HasMany
-    {
-        return $this->hasMany(BomItem::class);
-    }
-
     public function transactions(): HasMany
     {
         return $this->hasMany(InventoryTransaction::class)->latest('created_at');

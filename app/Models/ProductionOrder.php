@@ -14,12 +14,7 @@ class ProductionOrder extends Model
 
     protected function casts(): array
     {
-        return ['bom_snapshot' => 'array', 'routing_snapshot' => 'array', 'scheduled_at' => 'date'];
-    }
-
-    public function bom(): BelongsTo
-    {
-        return $this->belongsTo(Bom::class);
+        return ['routing_snapshot' => 'array', 'scheduled_at' => 'date'];
     }
 
     public function product(): BelongsTo

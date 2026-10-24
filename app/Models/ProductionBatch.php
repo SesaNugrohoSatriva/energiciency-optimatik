@@ -13,7 +13,6 @@ class ProductionBatch extends Model
     protected function casts(): array
     {
         return [
-            'bom_snapshot' => 'array',
             'routing_snapshot' => 'array',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
@@ -28,16 +27,6 @@ class ProductionBatch extends Model
     public function events(): HasMany
     {
         return $this->hasMany(ProductionBatchEvent::class)->latest('created_at');
-    }
-
-    public function materials(): HasMany
-    {
-        return $this->hasMany(BatchMaterial::class, 'production_batch_id')->orderBy('id');
-    }
-
-    public function inventoryTransactions(): HasMany
-    {
-        return $this->hasMany(InventoryTransaction::class, 'production_batch_id')->latest('created_at');
     }
 
     public function energyRecords(): HasMany

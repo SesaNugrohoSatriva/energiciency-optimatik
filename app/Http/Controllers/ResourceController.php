@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\{Machine,Process,Product,ProductionOrder,InventoryItem,MaintenanceLog,EnergyRecord,BomItem};
+use App\Models\{Machine,Process,Product,ProductionOrder,InventoryItem,MaintenanceLog,EnergyRecord};
 use App\Services\ProductionOrderStructureService;
 class ResourceController extends Controller
 {
-    private array $map = ['machines' => [Machine::class, 'Mesin', 'machine_fields'], 'processes' => [Process::class, 'Proses', 'process_fields'], 'products' => [Product::class, 'Produk', 'product_fields'], 'production-orders' => [ProductionOrder::class, 'Order Produksi', 'order_fields'], 'inventory' => [InventoryItem::class, 'Persediaan', 'inventory_fields'], 'maintenance-logs' => [MaintenanceLog::class, 'Pemeliharaan', 'maintenance_fields'], 'energy-records' => [EnergyRecord::class, 'Data Energi', 'energy_fields'], 'bom-items' => [BomItem::class, 'Komponen BOM', 'bom_fields'], 'oee-records' => [\App\Models\OeeRecord::class, 'Catatan OEE', 'oee_fields']];
+    private array $map = ['machines' => [Machine::class, 'Mesin', 'machine_fields'], 'processes' => [Process::class, 'Proses', 'process_fields'], 'products' => [Product::class, 'Produk', 'product_fields'], 'production-orders' => [ProductionOrder::class, 'Order Produksi', 'order_fields'], 'inventory' => [InventoryItem::class, 'Persediaan', 'inventory_fields'], 'maintenance-logs' => [MaintenanceLog::class, 'Pemeliharaan', 'maintenance_fields'], 'energy-records' => [EnergyRecord::class, 'Data Energi', 'energy_fields'], 'oee-records' => [\App\Models\OeeRecord::class, 'Catatan OEE', 'oee_fields']];
 
     private function config(Request $r): array
     {
@@ -25,14 +24,14 @@ class ResourceController extends Controller
             'machines' => ['code', 'name', 'category', 'location', 'device_id'], 'processes' => ['code', 'name', 'description'],
             'products' => ['sku', 'name', 'category', 'description'], 'production-orders' => ['order_number', 'status'],
             'inventory' => ['sku', 'name', 'category', 'location'], 'maintenance-logs' => ['issue', 'priority', 'status'],
-            'energy-records' => ['device_id', 'external_event_id', 'source'], 'bom-items' => ['component_sku', 'component_name', 'supplier'],
+            'energy-records' => ['device_id', 'external_event_id', 'source'],
             'oee-records' => ['notes']
         ];
         $sortColumns = [
             'machines' => ['name', 'code', 'status', 'rated_kw'], 'processes' => ['name', 'code', 'estimated_kwh'],
             'products' => ['name', 'sku', 'batch_size'], 'production-orders' => ['order_number', 'status', 'scheduled_at'],
             'inventory' => ['name', 'sku', 'quantity'], 'maintenance-logs' => ['scheduled_at', 'priority', 'status'],
-            'energy-records' => ['recorded_at', 'kwh', 'cost', 'source'], 'bom-items' => ['component_name', 'component_sku', 'unit_cost'],
+            'energy-records' => ['recorded_at', 'kwh', 'cost', 'source'],
             'oee-records' => ['recorded_on', 'oee']
         ];
         $query = $class::query();
@@ -82,7 +81,7 @@ class ResourceController extends Controller
     {
         [$key,$class,$label] = $this->config($request);
         $record = new $class;
-        $prefillFields = $key === 'energy-records' ? ['machine_id', 'production_order_id', 'production_batch_id'] : ($key === 'maintenance-logs' ? ['machine_id'] : ['product_id', 'bom_id']);
+        $prefillFields = $key === 'energy-records' ? ['machine_id', 'production_order_id', 'production_batch_id'] : ($key === 'maintenance-logs' ? ['machine_id'] : ['product_id']);
         foreach ($prefillFields as $field) {
             if ($request->filled($field)) {
                 $record->{
@@ -120,10 +119,10 @@ class ResourceController extends Controller
 
     private function showProductionOrder(int $id)
     {
-        $record = ProductionOrder::with(['product', 'bom', 'routing', 'batches.events.user'])->findOrFail($id);
+        $record = ProductionOrder::with(['product', 'routing', 'batches.events.user'])->findOrFail($id);
         $remaining = max(0, (int)$record->planned_quantity - (int)$record->baseline_actual_quantity - (int)$record->batches()->where('status', '!=', 'cancelled')->sum('planned_quantity'));
         $pageTitle = 'Order ' . $record->order_number;
-        $pageDescription = 'Batch, versi struktur, dan progres order produksi.';
+        $pageDescription = 'Routing dan progres order produksi.';
         $breadcrumbs = [['label' => 'Dashboard', 'url' => route('dashboard')], ['label' => 'Production Orders', 'url' => route('production-orders.index')], ['label' => $record->order_number]];
 
         return view('production-orders.show', compact('record', 'remaining', 'pageTitle', 'pageDescription', 'breadcrumbs'));
@@ -132,28 +131,25 @@ class ResourceController extends Controller
     private function showInventory(int $id)
     {
         $record = InventoryItem::findOrFail($id);
-        $reserved = (float)\App\Models\BatchMaterial::where('inventory_item_id', $record->id)->sum(\Illuminate\Support\Facades\DB::raw('reserved_quantity - consumed_quantity'));
-        $transactions = $record->transactions()->with(['batch', 'batch.productionOrder', 'user'])->paginate(25)->withQueryString();
+        $transactions = $record->transactions()->with('user')->paginate(25)->withQueryString();
         $pageTitle = $record->name;
         $pageDescription = $record->sku . ' · Saldo dan ledger transaksi inventory.';
         $breadcrumbs = [['label' => 'Dashboard', 'url' => route('dashboard')], ['label' => 'Inventory', 'url' => route('inventory.index')], ['label' => $record->name]];
 
-        return view('inventory.show', compact('record', 'reserved', 'transactions', 'pageTitle', 'pageDescription', 'breadcrumbs'));
+        return view('inventory.show', compact('record', 'transactions', 'pageTitle', 'pageDescription', 'breadcrumbs'));
     }
 
     private function showProduct(Request $request, int $id)
     {
-        $product = Product::with(['activeBom.items.inventoryItem', 'boms.items.inventoryItem', 'activeRouting.operations.process.machine', 'routings.operations.process.machine', 'productionOrders'])->findOrFail($id);
+        $product = Product::with(['activeRouting.operations.process.machine', 'routings.operations.process.machine', 'productionOrders'])->findOrFail($id);
         $tab = $request->query('tab', 'overview');
-        $tabs = ['overview', 'bom', 'routing', 'history', 'cost', 'energy'];
+        $tabs = ['overview', 'routing', 'history', 'cost', 'energy'];
         abort_unless(in_array($tab, $tabs, true), 404);
         $orders = $product->productionOrders()->latest()->paginate(10, ['*'], 'orders_page')->withQueryString();
         $linkedEnergy = EnergyRecord::join('production_orders', 'energy_records.production_order_id', '=', 'production_orders.id')->where('production_orders.product_id', $product->id);
         $energySummary = (clone $linkedEnergy)->selectRaw('COALESCE(SUM(energy_records.kwh),0) as kwh, COALESCE(SUM(energy_records.cost),0) as cost, MAX(energy_records.recorded_at) as last_recorded_at')->first();
         $energyByMachine = (clone $linkedEnergy)->leftJoin('machines', 'energy_records.machine_id', '=', 'machines.id')->selectRaw("COALESCE(machines.name,'Mesin tidak ditautkan') as machine, SUM(energy_records.kwh) as kwh")->groupBy('machines.name')->orderByDesc('kwh')->get();
-        $activeBom = $product->activeBom;
         $activeRouting = $product->activeRouting;
-        $bomMaterialEstimate = $activeBom?->items->sum(fn ($item) => ((float)$item->quantity_per_unit * (1 + (float)$item->scrap_allowance_percent / 100) * (float)$item->unit_cost)) ?? 0;
         $routingEstimate = ['minutes' => 0, 'energy' => 0];
         if ($activeRouting) {
             foreach ($activeRouting->operations as $operation) {
@@ -165,7 +161,7 @@ class ResourceController extends Controller
         $pageDescription = $product->sku . ' · Detail dan jejak operasional produk.';
         $breadcrumbs = [['label' => 'Dashboard', 'url' => route('dashboard')], ['label' => 'Products', 'url' => route('products.index')], ['label' => $product->name]];
 
-        return view('products.show', compact('product', 'tab', 'tabs', 'orders', 'energySummary', 'energyByMachine', 'activeBom', 'activeRouting', 'bomMaterialEstimate', 'routingEstimate', 'pageTitle', 'pageDescription', 'breadcrumbs'));
+        return view('products.show', compact('product', 'tab', 'tabs', 'orders', 'energySummary', 'energyByMachine', 'activeRouting', 'routingEstimate', 'pageTitle', 'pageDescription', 'breadcrumbs'));
     }
 
     public function store(Request $request, ProductionOrderStructureService $structure)
@@ -176,15 +172,7 @@ class ResourceController extends Controller
         if ($key === 'production-orders') {
             $data['baseline_actual_quantity'] = (int)($data['actual_quantity'] ?? 0);
             $data['baseline_good_quantity'] = (int)($data['good_quantity'] ?? 0);
-            $data = array_merge($data, $structure->capture(new ProductionOrder($data), $data['bom_id'] ?? null, $data['product_routing_id'] ?? null));
-        }
-        if ($key === 'bom-items') {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $class) {
-                $bom = \App\Models\Bom::query()->lockForUpdate()->findOrFail($data['bom_id']); if ($bom->status !== 'draft') {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['bom_id' => 'Hanya draft BOM yang dapat diubah.']);
-                }
-                $class::create($data);
-            });
+            $data = array_merge($data, $structure->capture(new ProductionOrder($data), $data['product_routing_id'] ?? null));
         }
         elseif ($key === 'inventory') {
             \Illuminate\Support\Facades\DB::transaction(function () use ($data, $class) {
@@ -194,10 +182,6 @@ class ResourceController extends Controller
         else {
             $class::create($data);
         }
-        if ($key === 'bom-items') {
-            return redirect()->route('products.show', [$data['product_id'], 'tab' => 'bom'])->with('success', "$label berhasil ditambahkan.");
-        }
-
         return redirect()->route($key . '.index')->with('success', "$label berhasil ditambahkan.");
     }
 
@@ -222,7 +206,7 @@ class ResourceController extends Controller
         if ($key === 'production-orders') {
             \Illuminate\Support\Facades\DB::transaction(function () use ($item, $data, $structure) {
                 $order = ProductionOrder::query()->lockForUpdate()->findOrFail($item->id); if ($order->batches()->exists()) {
-                    foreach (['product_id', 'bom_id', 'product_routing_id', 'status', 'actual_quantity', 'good_quantity'] as $field) {
+                    foreach (['product_id', 'product_routing_id', 'status', 'actual_quantity', 'good_quantity'] as $field) {
                         if ((string)$order->{
                             $field}
                         !== (string)($data[$field] ?? '')) {
@@ -234,35 +218,21 @@ class ResourceController extends Controller
                     }
                 }
                 else {
-                    $data['baseline_actual_quantity'] = (int)($data['actual_quantity'] ?? 0); $data['baseline_good_quantity'] = (int)($data['good_quantity'] ?? 0); $data = array_merge($data, $structure->capture(new ProductionOrder($data), $data['bom_id'] ?? null, $data['product_routing_id'] ?? null));
+                    $data['baseline_actual_quantity'] = (int)($data['actual_quantity'] ?? 0); $data['baseline_good_quantity'] = (int)($data['good_quantity'] ?? 0); $data = array_merge($data, $structure->capture(new ProductionOrder($data), $data['product_routing_id'] ?? null));
                 }
                 $order->update($data);
             });
         }
-        elseif ($key === 'bom-items') {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($item, $data) {
-                $originalBom = \App\Models\Bom::query()->lockForUpdate()->findOrFail($item->bom_id); if ($originalBom->status !== 'draft' || (int)$item->bom_id !== (int)$data['bom_id']) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['bom_id' => 'Komponen hanya dapat diubah di draft BOM asalnya.']);
-                }
-                $bom = \App\Models\Bom::query()->lockForUpdate()->findOrFail($data['bom_id']); if ($bom->status !== 'draft') {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['bom_id' => 'Hanya draft BOM yang dapat diubah.']);
-                }
-                $item->update($data);
-            });
-        }
         elseif ($key === 'inventory') {
             \Illuminate\Support\Facades\DB::transaction(function () use ($item, $data, $request) {
-                $inventory = InventoryItem::query()->lockForUpdate()->findOrFail($item->id); if ($inventory->unit !== $data['unit'] && ($inventory->transactions()->exists() || $inventory->bomItems()->exists() || \App\Models\BatchMaterial::where('inventory_item_id', $inventory->id)->exists())) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['unit' => 'Satuan tidak dapat diubah setelah item dirujuk BOM atau memiliki transaksi.']);
+                $inventory = InventoryItem::query()->lockForUpdate()->findOrFail($item->id); if ($inventory->unit !== $data['unit'] && $inventory->transactions()->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['unit' => 'Satuan tidak dapat diubah setelah item memiliki transaksi.']);
                 }
                 $quantity = (float)$data['quantity']; unset($data['quantity']); $inventory->update($data); app(\App\Services\InventoryTransactionService::class)->setOnHand($inventory, $quantity, $request->user()?->id);
             });
         }
         else {
             $item->update($data);
-        }
-        if ($key === 'bom-items') {
-            return redirect()->route('products.show', [$item->product_id, 'tab' => 'bom'])->with('success', "$label berhasil diperbarui.");
         }
         if ($key === 'production-orders') {
             return redirect()->route('production-orders.show', $item)->with('success', "$label berhasil diperbarui.");
@@ -278,24 +248,12 @@ class ResourceController extends Controller
     {
         [$key,$class,$label,$fields] = $this->config($request);
         $item = $class::findOrFail($record);
-        if ($key === 'bom-items') {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($item) {
-                $bom = \App\Models\Bom::query()->lockForUpdate()->findOrFail($item->bom_id); if ($bom->status !== 'draft') {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['bom' => 'Komponen pada BOM aktif/arsip tidak dapat dihapus.']);
-                }
-                $item->delete();
-            });
-        }
-        elseif ($key === 'inventory' && $item->transactions()->exists()) {
+        if ($key === 'inventory' && $item->transactions()->exists()) {
             throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'Item dengan riwayat transaksi inventory tidak dapat dihapus.']);
         }
         else {
             $item->delete();
         }
-        if ($key === 'bom-items') {
-            return redirect()->route('products.show', [$item->product_id, 'tab' => 'bom'])->with('success', "$label berhasil dihapus.");
-        }
-
         return redirect()->route($key . '.index')->with('success', "$label berhasil dihapus.");
     }
 
@@ -323,7 +281,7 @@ class ResourceController extends Controller
 
     private function references(): array
     {
-        return ['machines' => Machine::orderBy('name')->get(['id', 'name', 'code']), 'processes' => Process::orderBy('name')->get(['id', 'name', 'code']), 'products' => Product::orderBy('name')->get(['id', 'name', 'sku']), 'productionOrders' => ProductionOrder::orderBy('order_number')->get(['id', 'order_number']), 'productionBatches' => \App\Models\ProductionBatch::with('productionOrder')->latest()->limit(200)->get(['id', 'production_order_id', 'batch_number']), 'routingOperations' => \App\Models\RoutingOperation::orderBy('product_routing_id')->orderBy('sequence')->limit(500)->get(['id', 'name', 'sequence']), 'boms' => \App\Models\Bom::with('product')->orderBy('product_id')->orderByDesc('version')->get(), 'productRoutings' => \App\Models\ProductRouting::with('product')->orderBy('product_id')->orderByDesc('version')->get(), 'inventoryItems' => InventoryItem::orderBy('name')->get(['id', 'name', 'sku', 'unit'])];
+        return ['machines' => Machine::orderBy('name')->get(['id', 'name', 'code']), 'processes' => Process::orderBy('name')->get(['id', 'name', 'code']), 'products' => Product::orderBy('name')->get(['id', 'name', 'sku']), 'productionOrders' => ProductionOrder::orderBy('order_number')->get(['id', 'order_number']), 'productionBatches' => \App\Models\ProductionBatch::with('productionOrder')->latest()->limit(200)->get(['id', 'production_order_id', 'batch_number']), 'routingOperations' => \App\Models\RoutingOperation::orderBy('product_routing_id')->orderBy('sequence')->limit(500)->get(['id', 'name', 'sequence']), 'productRoutings' => \App\Models\ProductRouting::with('product')->orderBy('product_id')->orderByDesc('version')->get()];
     }
 
     private function validateData(Request $r, string $key, ?int $id = null): array
@@ -332,32 +290,14 @@ class ResourceController extends Controller
             'machines' => ['code' => 'required|string|max:50', 'name' => 'required|string|max:160', 'category' => 'nullable|string|max:80', 'location' => 'nullable|string|max:120', 'capacity' => 'nullable|numeric|min:0', 'capacity_unit' => 'nullable|string|max:30', 'rated_kw' => 'nullable|numeric|min:0', 'target_oee' => 'nullable|numeric|min:0|max:100', 'status' => 'required|in:Normal,Monitor,Down', 'device_id' => 'nullable|string|max:120'],
             'processes' => ['code' => 'required|string|max:50', 'name' => 'required|string|max:160', 'machine_id' => 'nullable|exists:machines,id', 'estimated_kwh' => 'nullable|numeric|min:0', 'setup_time_minutes' => 'nullable|integer|min:0', 'ideal_cycle_seconds' => 'nullable|numeric|min:0', 'labor_required' => 'nullable|integer|min:1', 'capacity' => 'nullable|numeric|min:0', 'capacity_unit' => 'nullable|string|max:30', 'work_instructions' => 'nullable|string', 'quality_criteria' => 'nullable|string', 'description' => 'nullable|string'],
             'products' => ['sku' => 'required|string|max:80', 'name' => 'required|string|max:180', 'description' => 'nullable|string', 'category' => 'nullable|string|max:100', 'base_unit' => 'required|string|max:30', 'is_active' => 'required|boolean', 'batch_size' => 'required|integer|min:1', 'target_oee' => 'nullable|numeric|min:0|max:100', 'estimated_production_minutes' => 'nullable|integer|min:0', 'estimated_energy_kwh' => 'nullable|numeric|min:0', 'simulation_status' => 'nullable|string|max:120', 'material_cost' => 'nullable|numeric|min:0', 'labor_cost' => 'nullable|numeric|min:0', 'overhead_cost' => 'nullable|numeric|min:0'],
-            'production-orders' => ['order_number' => 'required|string|max:80', 'product_id' => 'required|exists:products,id', 'bom_id' => 'nullable|exists:boms,id', 'product_routing_id' => 'nullable|exists:product_routings,id', 'status' => 'required|in:Planned,In Progress,Completed,Delayed', 'planned_quantity' => 'required|integer|min:1', 'actual_quantity' => 'nullable|integer|min:0', 'good_quantity' => 'nullable|integer|min:0|lte:actual_quantity', 'scheduled_at' => 'nullable|date'],
+            'production-orders' => ['order_number' => 'required|string|max:80', 'product_id' => 'required|exists:products,id', 'product_routing_id' => 'nullable|exists:product_routings,id', 'status' => 'required|in:Planned,In Progress,Completed,Delayed', 'planned_quantity' => 'required|integer|min:1', 'actual_quantity' => 'nullable|integer|min:0', 'good_quantity' => 'nullable|integer|min:0|lte:actual_quantity', 'scheduled_at' => 'nullable|date'],
             'inventory' => ['sku' => 'required|string|max:80', 'name' => 'required|string|max:180', 'category' => 'nullable|string|max:100', 'quantity' => 'required|numeric|min:0', 'threshold' => 'required|numeric|min:0', 'unit' => 'required|string|max:20', 'unit_cost' => 'required|numeric|min:0', 'location' => 'nullable|string|max:100'],
             'maintenance-logs' => ['machine_id' => 'required|exists:machines,id', 'issue' => 'required|string|max:200', 'priority' => 'required|in:Low,Medium,High,Critical', 'status' => 'required|in:Open,Monitor,Planned,In Progress,Completed', 'scheduled_at' => 'nullable|date', 'notes' => 'nullable|string'],
             'energy-records' => ['machine_id' => 'nullable|exists:machines,id', 'process_id' => 'nullable|exists:processes,id', 'production_order_id' => 'nullable|exists:production_orders,id', 'production_batch_id' => 'nullable|exists:production_batches,id', 'routing_operation_id' => 'nullable|exists:routing_operations,id', 'device_id' => 'nullable|string|max:120', 'kwh' => 'required|numeric|min:0', 'tariff_per_kwh' => 'required|numeric|min:0', 'recorded_at' => 'required|date', 'source' => 'required|in:simulation,manual,iot', 'external_event_id' => 'nullable|string|max:180'],
-            'bom-items' => ['product_id' => 'required|exists:products,id', 'bom_id' => 'required|exists:boms,id', 'inventory_item_id' => 'nullable|exists:inventory_items,id', 'component_sku' => 'required|string|max:80', 'component_name' => 'required|string|max:180', 'quantity_per_unit' => 'required|numeric|min:0.001', 'scrap_allowance_percent' => 'nullable|numeric|min:0|max:100', 'unit' => 'required|string|max:20', 'unit_cost' => 'required|numeric|min:0', 'supplier' => 'nullable|string|max:160'],
             'oee-records' => ['machine_id' => 'required|exists:machines,id', 'production_batch_id' => 'nullable|exists:production_batches,id', 'routing_operation_id' => 'nullable|exists:routing_operations,id', 'recorded_on' => 'required|date', 'planned_minutes' => 'required|integer|min:1', 'operating_minutes' => 'required|integer|min:0|lte:planned_minutes', 'ideal_cycle_minutes' => 'required|numeric|min:0.001', 'total_output' => 'required|integer|min:0', 'good_output' => 'required|integer|min:0|lte:total_output', 'notes' => 'nullable|string']
         ];
         $rules = $schemas[$key];
         $data = $r->validate($rules);
-        if ($key === 'bom-items') {
-            $bom = \App\Models\Bom::findOrFail($data['bom_id']);
-            if ((int)$bom->product_id !== (int)$data['product_id']) {
-                throw \Illuminate\Validation\ValidationException::withMessages(['bom_id' => 'BOM harus berasal dari produk yang dipilih.']);
-            }
-            if ($bom->status !== 'draft') {
-                throw \Illuminate\Validation\ValidationException::withMessages(['bom_id' => 'Hanya draft BOM yang dapat diubah. Buat versi draft baru.']);
-            }
-            $data['scrap_allowance_percent'] = $data['scrap_allowance_percent'] ?? 0;
-            if ($data['inventory_item_id']) {
-                $inventoryItem = \App\Models\InventoryItem::findOrFail($data['inventory_item_id']);
-                $data['component_sku'] = $inventoryItem->sku;
-                $data['component_name'] = $inventoryItem->name;
-                $data['unit'] = $inventoryItem->unit;
-                $data['unit_cost'] = $inventoryItem->unit_cost;
-            }
-        }
         if (in_array($key, ['energy-records', 'oee-records'], true) && isset($data['production_batch_id'])) {
             $batch = \App\Models\ProductionBatch::findOrFail($data['production_batch_id']);
             if ($key === 'energy-records') {

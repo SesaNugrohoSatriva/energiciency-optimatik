@@ -1,6 +1,6 @@
 # Energiciency — Laravel 12
 
-Aplikasi manajemen produksi, OEE, BOM, persediaan, energi, costing, maintenance, laporan, dan fondasi integrasi sensor IoT. Seluruh seed data ditandai simulasi dan bukan data resmi.
+Aplikasi manajemen produksi, OEE, persediaan, energi, costing, maintenance, laporan, dan fondasi integrasi sensor IoT. Seluruh seed data ditandai simulasi dan bukan data resmi.
 
 ## Kebutuhan Windows
 - PHP 8.2+ dengan ekstensi `pdo_sqlite` untuk development lokal; aktifkan `pdo_mysql` hanya untuk deployment MySQL, serta `mbstring`, `openssl`, `fileinfo`, `tokenizer`, `xml`, `ctype`, `curl`, `zip`
@@ -33,6 +33,7 @@ Aplikasi manajemen produksi, OEE, BOM, persediaan, energi, costing, maintenance,
 - Workflow memasang dependensi Composer dan mengunggah `vendor`; jangan mengecualikan folder tersebut dari deploy.
 - Buat `.env` secara manual di direktori project pada server (sejajar dengan `artisan`), karena file `.env` sengaja tidak diunggah. Isi minimal `APP_KEY`, `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, dan kredensial database hosting.
 - Pastikan `storage` dan `bootstrap/cache` dapat ditulisi oleh PHP. Setelah deploy, jalankan migrasi melalui cara yang tersedia di hosting sebelum membuka aplikasi.
+- Sebelum migrasi penghapusan BOM, buat backup database. Migrasi ini menghapus tabel BOM, snapshot BOM, kebutuhan material batch, serta transaksi inventory yang terkait dengan batch; saldo master inventory dan transaksi pembukaan/penyesuaian stok dipertahankan.
 
 ## Login demo
 - Email: `admin@energiciency.local`
@@ -44,10 +45,10 @@ Ganti password demo dan token IoT sebelum dipakai di jaringan selain localhost. 
 - Dashboard KPI energi, biaya energi, output baik, jumlah order, dan OEE agregat.
 - Detail mesin dengan histori energi, ringkasan biaya, OEE berbobot dari input valid, batch yang benar-benar tertaut, dan maintenance.
 - Energy Monitoring dengan filter rentang waktu, mesin, sumber, order/batch, device, pencarian, tren jam/hari/minggu/bulan, dan detail payload tersamarkan.
-- CRUD mesin, proses, produk, komponen BOM, order produksi, persediaan, catatan energi, serta log pemeliharaan.
+- CRUD mesin, proses, produk, order produksi, persediaan, catatan energi, serta log pemeliharaan.
 - Laporan energi per bulan.
 - Migrasi MySQL dengan foreign key, indeks waktu telemetri, dan unique event ID untuk mencegah event IoT terduplikasi.
-- Seeder 6 mesin, 6 proses, 5 produk, BOM contoh, 6 order statis + 8 order generator, 9 item persediaan, 3 log maintenance, data OEE dan 14 hari data energi. Generator order mengikuti pola status/tanggal dan nilai ilustratif; nama robot dipertahankan sebagai label generator sementara katalog produk mengacu pada lima produk utama.
+- Seeder 6 mesin, 6 proses, 5 produk, 6 order statis + 8 order generator, 9 item persediaan, 3 log maintenance, data OEE dan 14 hari data energi. Generator order mengikuti pola status/tanggal dan nilai ilustratif; nama robot dipertahankan sebagai label generator sementara katalog produk mengacu pada lima produk utama.
 
 ## API penerimaan data IoT
 Endpoint: `POST /api/iot/telemetry`

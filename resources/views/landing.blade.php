@@ -191,7 +191,7 @@
                     <article class="rounded-xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/60">
                         <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16M8 4v16m8-16v16"/></svg></span>
                         <h3 class="mt-5 text-sm font-bold text-navy-900">Persediaan &amp; costing</h3>
-                        <p class="mt-2 text-xs leading-6 text-slate-500">Kelola komponen, BOM, transaksi material, dan gambaran biaya produksi.</p>
+                        <p class="mt-2 text-xs leading-6 text-slate-500">Kelola master persediaan dan pantau estimasi serta biaya produksi.</p>
                     </article>
                 </div>
             </section>
@@ -201,7 +201,7 @@
                     <div class="max-w-2xl">
                         <p class="text-xs font-bold uppercase tracking-[0.18em] text-brand-200">Energiciency</p>
                         <h2 class="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">Informasi operasional, dalam satu pandangan.</h2>
-                        <p class="mt-3 text-sm leading-6 text-slate-300">Workspace untuk manajemen produksi, OEE, BOM, persediaan, energi, costing, pemeliharaan, dan fondasi integrasi IoT.</p>
+                        <p class="mt-3 text-sm leading-6 text-slate-300">Workspace untuk manajemen produksi, OEE, persediaan, energi, costing, pemeliharaan, dan fondasi integrasi IoT.</p>
                     </div>
                     <a href="{{ route('login') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-semibold text-navy-900 transition hover:bg-brand-50">
                         Masuk ke Energiciency

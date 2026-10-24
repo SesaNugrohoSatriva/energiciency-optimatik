@@ -2,29 +2,13 @@
 
 @section('content')
     @php
-        $bomSnapshot = $record->bom_snapshot;
         $routingSnapshot = $record->routing_snapshot;
     @endphp
 
-    @if (!$bomSnapshot)
-        <x-ui.next-action class="mb-5" tone="warning">
-            <p>Order belum memiliki snapshot BOM. Edit order dan pilih BOM aktif agar kebutuhan material tersimpan pada snapshot order.</p>
-            <a class="mt-2 inline-flex font-semibold underline" href="{{ route('production-orders.edit', $record) }}">Pilih BOM untuk order</a>
-        </x-ui.next-action>
-    @elseif (empty($routingSnapshot['operations']))
+    @if (empty($routingSnapshot['operations']))
         <x-ui.next-action class="mb-5" tone="warning">
             <p>Snapshot routing belum memiliki operasi. Pilih routing aktif yang berisi operasi sebelum memulai batch.</p>
             <a class="mt-2 inline-flex font-semibold underline" href="{{ route('production-orders.edit', $record) }}">Periksa routing order</a>
-        </x-ui.next-action>
-    @elseif (empty($bomSnapshot['items']))
-        <x-ui.next-action class="mb-5" tone="warning">
-            <p>Snapshot BOM order belum memiliki komponen. Lengkapi draft BOM dengan material dan pemetaan inventory sebelum merencanakan batch produksi.</p>
-            <a class="mt-2 inline-flex font-semibold underline" href="{{ route('products.show', [$record->product_id, 'tab' => 'bom']) }}">Lengkapi BOM produk</a>
-        </x-ui.next-action>
-    @elseif (collect($bomSnapshot['items'])->contains(fn ($item) => empty($item['inventory_item_id'])))
-        <x-ui.next-action class="mb-5" tone="warning">
-            <p>Satu atau lebih komponen BOM belum dipetakan ke inventory. Buat versi draft BOM dan tautkan item yang benar; batch dengan material belum dipetakan tidak dapat dimulai.</p>
-            <a class="mt-2 inline-flex font-semibold underline" href="{{ route('products.show', [$record->product_id, 'tab' => 'bom']) }}">Tinjau pemetaan BOM</a>
         </x-ui.next-action>
     @elseif ($record->status === 'Completed')
         <x-ui.next-action class="mb-5" tone="success">
@@ -32,19 +16,19 @@
         </x-ui.next-action>
     @elseif ($record->batches->contains(fn ($batch) => $batch->status === 'in_progress'))
         <x-ui.next-action class="mb-5">
-            <p>Batch sedang berjalan. Catat konsumsi material yang benar, lalu masukkan output aktual dan output baik saat pekerjaan selesai.</p>
+            <p>Batch sedang berjalan. Catat output aktual dan output baik saat pekerjaan selesai.</p>
             @php($activeBatch = $record->batches->first(fn ($batch) => $batch->status === 'in_progress'))
             <a class="mt-2 inline-flex font-semibold underline" href="{{ route('production-orders.batches.show', [$record, $activeBatch]) }}">Buka batch berjalan</a>
         </x-ui.next-action>
     @elseif ($record->batches->contains(fn ($batch) => $batch->status === 'planned'))
         <x-ui.next-action class="mb-5">
-            <p>Batch masih direncanakan. Periksa ketersediaan dan pemetaan inventory, reservasi material yang cukup, lalu mulai batch dari halaman detailnya. Reservasi tidak mengurangi saldo fisik.</p>
+            <p>Batch masih direncanakan. Periksa routing snapshot, lalu mulai batch dari halaman detailnya.</p>
             @php($plannedBatch = $record->batches->first(fn ($batch) => $batch->status === 'planned'))
             <a class="mt-2 inline-flex font-semibold underline" href="{{ route('production-orders.batches.show', [$record, $plannedBatch]) }}">Periksa batch yang direncanakan</a>
         </x-ui.next-action>
     @elseif ($remaining > 0)
         <x-ui.next-action class="mb-5">
-            <p>Struktur order sudah tersedia. Rencanakan batch hingga jumlahnya tidak melebihi sisa {{ number_format($remaining) }} unit; setiap batch akan menyalin snapshot BOM dan routing ini.</p>
+            <p>Struktur routing order sudah tersedia. Rencanakan batch hingga jumlahnya tidak melebihi sisa {{ number_format($remaining) }} unit; setiap batch akan menyalin snapshot routing ini.</p>
             <a class="mt-2 inline-flex font-semibold underline" href="#create-batch">Buat batch berikutnya</a>
         </x-ui.next-action>
     @else
@@ -79,7 +63,7 @@
         <section class="app-card overflow-hidden xl:col-span-2">
             <div class="border-b border-slate-100 p-5 sm:px-6">
                 <h2 class="text-base font-bold text-navy-900">Production batches</h2>
-                <p class="mt-1 text-xs text-slate-500">Setiap batch menyimpan salinan BOM dan routing saat dibuat. Routing aktif dan pemetaan/reservasi material wajib sebelum produksi dimulai.</p>
+                <p class="mt-1 text-xs text-slate-500">Setiap batch menyimpan salinan routing saat dibuat. Routing aktif dengan operasi wajib sebelum produksi dimulai.</p>
             </div>
             <div class="divide-y divide-slate-100">
                 @forelse ($record->batches as $batch)
@@ -98,15 +82,7 @@
 
         <aside class="space-y-5">
             <section class="app-card p-5 sm:p-6">
-                <h2 class="text-sm font-bold text-navy-900">Snapshot struktur order</h2>
-                @if ($bomSnapshot)
-                    <div class="mt-4 rounded-lg bg-slate-50 p-3">
-                        <p class="text-xs font-bold text-navy-900">{{ $bomSnapshot['bom_number'] ?? 'BOM' }} · v{{ $bomSnapshot['version'] ?? '—' }}</p>
-                        <p class="mt-1 text-xs text-slate-500">{{ count($bomSnapshot['items'] ?? []) }} komponen · {{ $record->bom?->status ?? 'versi tersimpan' }}</p>
-                    </div>
-                @else
-                    <p class="mt-3 text-xs text-amber-800">BOM belum tersimpan. Batch tidak dapat dimulai sebelum struktur aktif ditetapkan.</p>
-                @endif
+                <h2 class="text-sm font-bold text-navy-900">Snapshot routing order</h2>
                 @if ($routingSnapshot)
                     <div class="mt-3 rounded-lg bg-slate-50 p-3">
                         <p class="text-xs font-bold text-navy-900">{{ $routingSnapshot['name'] ?? 'Routing' }} · v{{ $routingSnapshot['version'] ?? '—' }}</p>
@@ -120,7 +96,7 @@
             @if ($remaining > 0 && $record->status !== 'Completed')
                 <section id="create-batch" class="app-card p-5 sm:p-6">
                     <h2 class="text-sm font-bold text-navy-900">Buat batch</h2>
-                    <p class="mt-1 text-xs text-slate-500">Jumlah unit dalam batch baru. Batas maksimum sisa order adalah {{ number_format($remaining) }} unit; tindakan ini membuat snapshot BOM dan routing.</p>
+                    <p class="mt-1 text-xs text-slate-500">Jumlah unit dalam batch baru. Batas maksimum sisa order adalah {{ number_format($remaining) }} unit; tindakan ini membuat snapshot routing.</p>
                     <form method="POST" action="{{ route('production-orders.batches.store', $record) }}" class="mt-4 space-y-3">
                         @csrf
                         <label for="planned_quantity" class="block text-xs font-semibold text-slate-700">Kuantitas rencana</label>

@@ -17,21 +17,6 @@ class Product extends Model
         return ['is_active' => 'boolean'];
     }
 
-    public function bomItems(): HasMany
-    {
-        return $this->hasMany(BomItem::class);
-    }
-
-    public function boms(): HasMany
-    {
-        return $this->hasMany(Bom::class);
-    }
-
-    public function activeBom(): HasOne
-    {
-        return $this->hasOne(Bom::class)->where('status', 'active');
-    }
-
     public function routings(): HasMany
     {
         return $this->hasMany(ProductRouting::class);

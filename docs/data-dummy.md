@@ -5,9 +5,9 @@ memakai `buildMockData()` dari `src/data/mockDatabase.js` sebagai sumber data
 awal, kecuali jika data sebelumnya sudah tersimpan di `localStorage` dengan key
 `energiciency-data`.
 
-> **Penting:** seluruh angka, order, komponen, biaya, performa mesin, dan log di
-> bawah adalah data simulasi untuk demo. Nama produk terinspirasi dari konsep
-> yang ditampilkan secara publik, tetapi catatan produk, BOM, routing, biaya,
+> **Penting:** seluruh angka, order, biaya, performa mesin, dan log di bawah
+> adalah data simulasi untuk demo. Nama produk terinspirasi dari konsep
+> yang ditampilkan secara publik, tetapi catatan produk, routing, biaya,
 > dan parameter produksi bukan spesifikasi atau data resmi perusahaan.
 
 ## Ringkasan data aplikasi
@@ -18,8 +18,7 @@ Objek dari `buildMockData()` menyediakan:
 | --- | --- |
 | `machines` | 6 mesin/workstation simulasi |
 | `processes` | 6 proses produksi dan estimasi energi |
-| `products` | 5 produk, termasuk BOM, routing, target OEE, dan estimasi biaya |
-| `boms` | BOM aktif yang dibuat dari BOM masing-masing produk |
+| `products` | 5 produk dengan routing, target OEE, dan estimasi biaya |
 | `orders` / `productionOrders` | Gabungan 8 order generator dan 6 order statis |
 | `inventory` | 9 item persediaan hasil generator |
 | `costing` | Data costing bulanan selama 6 bulan |
@@ -68,25 +67,24 @@ produk yang didukung.
 | Cutting | 27 | 24 | 79% |
 | Finishing | 19 | 18 | 72% |
 
-## Katalog produk dan BOM
+## Katalog produk
 
 Semua produk berstatus Active dan memiliki `simulationStatus` yang menyatakan
 bahwa datanya simulasi ilustratif, bukan data resmi. Setiap produk mempunyai
 routing proses dengan waktu siklus, waktu setup, output, energi, dan kebutuhan
 tenaga kerja.
 
-| ID | SKU | Produk | Kategori | Ukuran batch | Target OEE | Komponen BOM simulasi |
+| ID | SKU | Produk | Kategori | Ukuran batch | Target OEE |
 | --- | --- | --- | --- | ---: | ---: | --- |
-| PRD-1001 | SIM-VENT-001 | ICU Ventilator | Medical Device | 8 | 82% | Structural frame assembly; Flow control module; Control electronics |
-| PRD-1002 | SIM-MPPS-001 | Mini-Plan Production System | Automation System | 10 | 84% | Linear motion frame; Drive and control cabinet; Sensor and interface kit |
-| PRD-1003 | SIM-DCS-001 | Digital Control System | Control System | 12 | 86% | Embedded controller board; Signal conditioning harness; Human-machine interface panel |
-| PRD-1004 | SIM-FLOAMS-001 | FloAms | Process Automation | 7 | 83% | Modular sensing frame; Actuation subassembly; Monitoring electronics |
-| PRD-1005 | SIM-APE-001 | Alat Peraga Pendidikan | Education Product | 15 | 89% | Learning module frame; Sensor and indicator kit; Educational control board |
+| PRD-1001 | SIM-VENT-001 | ICU Ventilator | Medical Device | 8 | 82% |
+| PRD-1002 | SIM-MPPS-001 | Mini-Plan Production System | Automation System | 10 | 84% |
+| PRD-1003 | SIM-DCS-001 | Digital Control System | Control System | 12 | 86% |
+| PRD-1004 | SIM-FLOAMS-001 | FloAms | Process Automation | 7 | 83% |
+| PRD-1005 | SIM-APE-001 | Alat Peraga Pendidikan | Education Product | 15 | 89% |
 
-Setiap komponen BOM memiliki ID `CMP-*`, jumlah per unit, satuan, harga unit,
-dan nama pemasok ilustratif. BOM hasil `buildMockData()` memiliki versi 1,
-status `active`, kuantitas output sesuai ukuran batch, serta penanda simulasi.
-Routing produk mengacu pada mesin dan proses di tabel katalog.
+Setiap produk memiliki routing proses dengan waktu siklus, waktu setup, output,
+energi, dan kebutuhan tenaga kerja. Biaya material, tenaga kerja, dan overhead
+merupakan estimasi master produk yang diinput terpisah.
 
 ## Order produksi
 
